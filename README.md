@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/hyeomans/zuora.svg?branch=master)](https://travis-ci.com/hyeomans/zuora)
+
 # zuora
 
 A Go client library to consume [Zuora API](https://www.zuora.com/developer/api-reference/).
