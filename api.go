@@ -17,6 +17,7 @@ type API struct {
 	AccountsService         *AccountsService
 	SubscriptionsService    *SubscriptionsService
 	PaymentsService         *PaymentsService
+	ObjectModel             ObjectModel
 }
 
 //NewAPI helper function to create all required services to interact with Zuora
@@ -33,7 +34,7 @@ func NewAPI(httpClient *http.Client, baseURL, clientID, clientSecret string, opt
 	subscriptionsService := newSubscriptionsService(zuoraConfig, tokenService, actionsService, errorRequestHandler)
 	paymentsService := newPaymentsService(zuoraConfig, tokenService, actionsService, errorRequestHandler)
 	productRatePlansService := newProductRatePlansService(zuoraConfig, tokenService, actionsService, errorRequestHandler)
-
+	objectModel := newObjectModel()
 	describeService := newDescribeService(zuoraConfig, tokenService)
 
 	return &API{
@@ -46,5 +47,6 @@ func NewAPI(httpClient *http.Client, baseURL, clientID, clientSecret string, opt
 		AccountsService:         accountsService,
 		SubscriptionsService:    subscriptionsService,
 		PaymentsService:         paymentsService,
+		ObjectModel:             objectModel,
 	}
 }
