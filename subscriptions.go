@@ -30,6 +30,7 @@ func newSubscriptionsService(config *Config, tokenService *TokenService, actions
 
 //ByKey This REST API reference describes how to retrieve detailed information about a
 //specified subscription in the latest version.
+//https://www.zuora.com/developer/api-reference/#operation/GET_SubscriptionsByKey
 func (s *SubscriptionsService) ByKey(ctx context.Context, accountKey string) (SubscriptionResponse, error) {
 	token, err := s.tokenService.Token(ctx)
 
@@ -88,6 +89,7 @@ func (s *SubscriptionsService) ByKey(ctx context.Context, accountKey string) (Su
 //returns the latest version of the subscriptions.
 //Subscription data is returned in reverse chronological order based on updatedDate.
 //accountKey possible values are: accountNumber or accountID
+//https://www.zuora.com/developer/api-reference/#operation/Object_GETSubscription
 func (s *SubscriptionsService) ByAccount(ctx context.Context, accountKey string) (SubscriptionResponse, error) {
 	token, err := s.tokenService.Token(ctx)
 
@@ -143,6 +145,7 @@ func (s *SubscriptionsService) ByAccount(ctx context.Context, accountKey string)
 }
 
 //Update contains the minimal update payload to apply to an accountKey
+//https://www.zuora.com/developer/api-reference/#operation/Object_PUTSubscription
 func (s *SubscriptionsService) Update(ctx context.Context, subscriptionKey string, subscriptionUpdatePayload SubscriptionUpdateMinimalPayload) (SubscriptionUpdateResponse, error) {
 	token, err := s.tokenService.Token(ctx)
 
@@ -223,6 +226,7 @@ func (s *SubscriptionsService) Update(ctx context.Context, subscriptionKey strin
 // The update operation is atomic. If any of the updates fails, the entire operation is rolled back.
 // The response of the Update Subscription call is based on the REST API minor version you set in the request header. The response structure might be different if you use different minor version numbers.
 // If you have the Invoice Settlement feature enabled, we recommend that you set the zuora-version parameter to 207.0 or later. Otherwise, an error is returned.
+//https://www.zuora.com/developer/api-reference/#operation/Object_PUTSubscription
 func (s *SubscriptionsService) UpdateFull(ctx context.Context, subscriptionKey string, subscriptionUpdatePayload SubscriptionUpdateFullPayload) (SubscriptionUpdateResponse, error) {
 	token, err := s.tokenService.Token(ctx)
 
@@ -284,6 +288,7 @@ func (s *SubscriptionsService) UpdateFull(ctx context.Context, subscriptionKey s
 }
 
 //Cancel use this to cancel an active subscription.
+//https://www.zuora.com/developer/api-reference/#operation/PUT_CancelSubscription
 func (s *SubscriptionsService) Cancel(ctx context.Context, subscriptionKey string, subscriptionCancellationPayload SubscriptionCancellationPayload) (SubscriptionCancellationResponse, error) {
 	token, err := s.tokenService.Token(ctx)
 
