@@ -1,19 +1,37 @@
 [![Build Status](https://travis-ci.com/hyeomans/zuora.svg?branch=master)](https://travis-ci.com/hyeomans/zuora)
 
-# zuora
-
 A Go client library to consume [Zuora API](https://www.zuora.com/developer/api-reference/).
 
 This is a __WIP__ and has minimal endpoints covered but it is really easy to add new ones.
 
-## Requirements
+
+- [Requirements](#requirements)
+- [Basic usage](#basic-usage)
+  * [Declaring a custom http client.](#declaring-a-custom-http-client)
+  * [Declaring a custom Token Store](#declaring-a-custom-token-store)
+  * [Error Handling](#error-handling)
+    + [Error ordering](#error-ordering)
+  * [ZOQL](#zoql)
+    + [All Products example](#all-products-example)
+    + [Filtering example](#filtering-example)
+- [Available endpoints](#available-endpoints)
+  * [Accounts](#accounts)
+  * [Actions](#actions)
+  * [Billing Documents](#billing-documents)
+  * [Describe](#describe)
+  * [Payments](#payments)
+  * [Products](#products)
+  * [Subscriptions](#subscriptions)
+
+
+# Requirements
 
 * Go >1.7
 * Zuora client ID (Use Environment variables as best practice)
 * Zuora client secret (Use Environment variables as best practice)
 * Zuora api url (Use Environment variables as best practice)
 
-## Basic usage
+# Basic usage
 
 ```go
 package main
@@ -52,7 +70,7 @@ func main() {
 }
 ```
 
-### Declaring a custom http client.
+## Declaring a custom http client.
 ```go
 package main
 
@@ -110,7 +128,7 @@ func newHTTPClient() *http.Client {
 }
 ```
 
-### Declaring a custom Token Store
+## Declaring a custom Token Store
 
 By default this package uses an in-memory backing store, but you can bring your own backing store, you only need to fullfill the interface:
 
@@ -302,7 +320,7 @@ func (m *myZuoraClient) GetProducts(ctx context.Context) ([]zuora.Product, error
 }
 ```
 
-## Filtering example
+### Filtering example
 
 `ZoqlComposer` uses [functional options](https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis) that allow you to compose a query that require:
 
@@ -386,3 +404,52 @@ func (m *myZuoraClient) GetProductById(ctx context.Context, id string) ([]zuora.
 }
 
 ```
+
+
+# Available endpoints
+
+## Accounts
+
+| Zuora reference     | How to call it               | Link                                                                        |
+|---------------------|------------------------------|-----------------------------------------------------------------------------|
+| Get account summary | AccountsService.Summary(...) | https://www.zuora.com/developer/api-reference/#operation/GET_AccountSummary |
+
+## Actions 
+
+| Zuora reference | How to call it            | Link                                                                      |
+|-----------------|---------------------------|---------------------------------------------------------------------------|
+| Query           | ActionsService.Query(...) | https://www.zuora.com/developer/api-reference/#operation/Action_POSTquery |
+
+## Billing Documents
+
+| Zuora reference       | How to call it                   | Link                                                                          |
+|-----------------------|----------------------------------|-------------------------------------------------------------------------------|
+| Get billing documents | BillingDocumentsService.Get(...) | https://www.zuora.com/developer/api-reference/#operation/GET_BillingDocuments |
+
+## Describe
+
+| Zuora reference | How to call it             | Link                                                        |
+|-----------------|----------------------------|-------------------------------------------------------------|
+| Describe object | DescribeService.Model(...) | https://www.zuora.com/developer/api-reference/#tag/Describe |
+
+## Payments
+
+| Zuora reference   | How to call it                    | Link                                                                       |
+|-------------------|-----------------------------------|----------------------------------------------------------------------------|
+| CRUD: Get payment | PaymentsService.ByIdThroughObject | https://www.zuora.com/developer/api-reference/#operation/Object_GETPayment |
+
+## Products
+
+| Zuora reference        | How to call it           | Link                                                                       |
+|------------------------|--------------------------|----------------------------------------------------------------------------|
+| CRUD: Retrieve Product | ProductsService.Get(...) | https://www.zuora.com/developer/api-reference/#operation/Object_GETProduct |
+
+## Subscriptions
+
+| Zuora reference              | How to call it                       | Link                                                                            |
+|------------------------------|--------------------------------------|---------------------------------------------------------------------------------|
+| Get subscriptions by account | SubscriptionsService.ByKey(...)      | https://www.zuora.com/developer/api-reference/#operation/GET_SubscriptionsByKey |
+| CRUD: Retrieve Subscription  | SubscriptionsService.ByAccount(...)  | https://www.zuora.com/developer/api-reference/#operation/Object_GETSubscription |
+| CRUD: Update Subscription    | SubscriptionsService.Update(...)     | https://www.zuora.com/developer/api-reference/#operation/Object_PUTSubscription |
+| CRUD: Update Subscription    | SubscriptionsService.UpdateFull(...) | https://www.zuora.com/developer/api-reference/#operation/Object_PUTSubscription |
+| Cancel subscription          | SubscriptionsService.Cancel(...)     | https://www.zuora.com/developer/api-reference/#operation/PUT_CancelSubscription |
