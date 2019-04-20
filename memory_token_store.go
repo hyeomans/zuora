@@ -8,13 +8,14 @@ import (
 type memoryTokenStore struct{}
 
 var cachedToken *Token
+var tokenExpiry time.Time
 var mutex sync.RWMutex
 
 func (m *memoryTokenStore) Token() (bool, *Token) {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	if cachedToken != nil {
-		expired := time.Now().UTC().Sub(time.Now().UTC().Add(time.Duration(cachedToken.ExpiresIn)*time.Second)) > 0
+		expired := time.Now().UTC().After(tokenExpiry)
 		if !expired {
 			return true, cachedToken
 		}
@@ -27,4 +28,5 @@ func (m *memoryTokenStore) Update(token *Token) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	cachedToken = token
+	tokenExpiry = time.Now().UTC().Add(time.Duration(token.ExpiresIn) * time.Second)
 }
