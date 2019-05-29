@@ -3,6 +3,7 @@ package zuora
 type V1 struct {
 	ActionsService  *actionsService
 	AccountsService *accountsService
+	CatalogService  *catalogService
 	// BillingDocumentsService *BillingDocumentsService
 	// ProductsService         *ProductsService
 	// ActionsService          *ActionsService
@@ -34,6 +35,7 @@ func NewAPI(httpClient Doer, authHeaderProvider AuthHeaderProvider, baseURL stri
 		V1: V1{
 			ActionsService:  newActionsService(httpClient, authHeaderProvider, baseURL),
 			AccountsService: newAccountsService(httpClient, authHeaderProvider, baseURL),
+			CatalogService:  newCatalogService(httpClient, authHeaderProvider, baseURL),
 		},
 		// BillingDocumentsService: billingDocumentsService,
 		// ProductsService:         productsService,
