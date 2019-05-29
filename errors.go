@@ -1,4 +1,4 @@
-package errors
+package zuora
 
 import (
 	"fmt"
@@ -6,42 +6,35 @@ import (
 	"strings"
 )
 
-type ValidRequestError struct {
-	Message string
-	Status  int
+type responseError struct {
+	isTemporary bool
+	message     string
 }
 
-type jsonValidRequestError struct {
-	Success   bool                     `json:"success"`
-	ProcessID string                   `json:"processId"`
-	Reasons   []jsonReasonRequestError `json:"reasons"`
-	Message   string
-	Status    int
+func (r responseError) Temporary() bool {
+	return r.isTemporary
 }
 
-type jsonReasonRequestError struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+func (r responseError) Error() string {
+	return r.message
 }
 
-func newValidRequestError(jsonValidRequestError *jsonValidRequestError) *ValidRequestError {
-	return &ValidRequestError{
-		Status:  generateStatus(jsonValidRequestError),
-		Message: generateErrorMsg(jsonValidRequestError),
-	}
+func isRetryableStatusCode(statusCode int) bool {
+	return http.StatusRequestTimeout == statusCode ||
+		http.StatusTooManyRequests == statusCode ||
+		http.StatusInternalServerError == statusCode ||
+		http.StatusServiceUnavailable == statusCode
 }
 
-func (e *ValidRequestError) Error() string {
-	return fmt.Sprintf("zuora returned an error (status: %v): %v", e.Status, e.Message)
-}
-
-func (e *ValidRequestError) Temporary() bool {
-	switch e.Status {
-	case http.StatusTooManyRequests, http.StatusLocked, http.StatusInternalServerError:
-		return true
-	}
-
-	return false
+//ErrorResponse could happen even when you get a 200 response from Zuora.
+//The correct way to parse it, is to look at the Code inside reasons acording to Zuora docs.
+type errorResponse struct {
+	Success   bool   `json:"success"`
+	ProcessID string `json:"processId"`
+	Reasons   []struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	} `json:"reasons"`
 }
 
 const (
@@ -85,23 +78,28 @@ const (
 	extensionError = 99
 )
 
-func generateErrorMsg(e *jsonValidRequestError) string {
-	if len(e.Reasons) == 0 {
-		return e.Message
-	}
-
-	var errorMessage []string
-
-	for i := 0; i < len(e.Reasons); i++ {
-		errorMessage = append(errorMessage, fmt.Sprintf("code: %v message: %v", e.Reasons[i].Code, strings.ToLower(e.Reasons[i].Message)))
-	}
-
-	return fmt.Sprint(strings.Join(errorMessage, " || "))
+func (e errorResponse) Temporary() bool {
+	return isRetryableStatusCode(getStatus(e))
 }
 
-func generateStatus(e *jsonValidRequestError) int {
+func (e errorResponse) Error() string {
 	if len(e.Reasons) == 0 {
-		return e.Status
+		return "there was an error on Zuora response but reasons array was empty."
+	}
+
+	allMessages := []string{}
+	for i := 0; i < len(e.Reasons); i++ {
+		currentCode := e.Reasons[i].Code
+		currentMessage := e.Reasons[i].Message
+		allMessages = append(allMessages, fmt.Sprintf("reason %v. Code: %v. Message: %v", i, currentCode, currentMessage))
+	}
+
+	return fmt.Sprintf("all errors from reasons: %v", strings.Join(allMessages, " -- "))
+}
+
+func getStatus(e errorResponse) int {
+	if len(e.Reasons) == 0 {
+		return http.StatusBadRequest
 	}
 
 	allCodes := []int{}
@@ -151,4 +149,20 @@ func generateStatus(e *jsonValidRequestError) int {
 	}
 
 	return http.StatusBadRequest
+}
+
+type tokenError struct {
+	Timestamp string `json:"timestamp"`
+	Status    int    `json:"status"`
+	Message   string `json:"message"`
+	Path      string `json:"path"`
+	Reason    string `json:"reason"`
+}
+
+func (r tokenError) Temporary() bool {
+	return false
+}
+
+func (r tokenError) Error() string {
+	return fmt.Sprintf("could not generate token: %v - %v - %v - %v", r.Path, r.Reason, r.Status, r.Message)
 }

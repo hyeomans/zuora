@@ -4,13 +4,10 @@ import (
 	"net/http"
 )
 
-//Token represents the OAuth token returned by Zuora.
-type Token struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
-	Scope       string `json:"scope"`
-	Jti         string `json:"jti"`
+// Doer is a common interface for Http clients
+// https://golang.org/pkg/net/http/#Client.Do
+type Doer interface {
+	Do(request *http.Request) (*http.Response, error)
 }
 
 //ConfigOption helper function to modify current Config struct
@@ -25,18 +22,23 @@ type Config struct {
 	tokenStore   TokenStorer
 }
 
-//TokenStorer handles token renewal with two simple methods.
-//Token() returns a boolean to indicate a token is valid and if valid, it will return the active token.
-//Update() causes a side-effect to update a token in whichever backing store you choose.
-type TokenStorer interface {
-	Token() (bool, *Token)
-	Update(*Token)
-}
-
 //Querier One who, or that which, queries actions
 type Querier interface {
 	Build() string
 }
+
+//ContextKey is a helper to define Zuora context values
+type ContextKey string
+
+func (c ContextKey) String() string {
+	return "zuora context key " + string(c)
+}
+
+//ContextKeyZuoraEntityIds will be added as a header on requests
+const ContextKeyZuoraEntityIds = ContextKey("Zuora-Entity-Ids")
+
+//ContextKeyZuoraTrackID will be addeed as a header on requests
+const ContextKeyZuoraTrackID = ContextKey("Zuora-Track-Id")
 
 //Product with default fields from Zuora. It does not include custom fields.
 type Product struct {
