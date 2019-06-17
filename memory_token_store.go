@@ -5,26 +5,26 @@ import (
 	"time"
 )
 
-type memoryTokenStore struct{}
+type MemoryTokenStore struct {
+	token *Token
+	sync.RWMutex
+}
 
-var cachedToken *Token
-var mutex sync.RWMutex
-
-func (m *memoryTokenStore) Token() (bool, *Token) {
-	mutex.RLock()
-	defer mutex.RUnlock()
-	if cachedToken != nil {
-		expired := time.Now().UTC().Sub(time.Now().UTC().Add(time.Duration(cachedToken.ExpiresIn)*time.Second)) > 0
+func (m *MemoryTokenStore) Token() (bool, *Token) {
+	m.RLock()
+	defer m.RUnlock()
+	if m.token != nil {
+		expired := time.Now().UTC().Sub(time.Now().UTC().Add(time.Duration(m.token.ExpiresIn-100)*time.Second)) > 0
 		if !expired {
-			return true, cachedToken
+			return true, m.token
 		}
 	}
 
 	return false, nil
 }
 
-func (m *memoryTokenStore) Update(token *Token) {
-	mutex.Lock()
-	defer mutex.Unlock()
-	cachedToken = token
+func (m *MemoryTokenStore) Update(token *Token) {
+	m.Lock()
+	defer m.Unlock()
+	m.token = token
 }

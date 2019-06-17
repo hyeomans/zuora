@@ -9,13 +9,13 @@ import (
 	"strings"
 )
 
-//DescribeService access to describe endpoint. Don't use in production or use at your own risk
-type DescribeService struct {
-	config       *Config
-	tokenService *TokenService
+type describeService struct {
+	http               Doer
+	authHeaderProvider AuthHeaderProvider
+	baseURL            string
 }
 
-type object struct {
+type xmlObject struct {
 	XMLName xml.Name `xml:"object"`
 	Name    string   `xml:"name"`
 	Fields  fields   `xml:"fields"`
@@ -40,66 +40,81 @@ type field struct {
 	Type       string   `xml:"type"`
 }
 
-func newDescribeService(config *Config, tokenService *TokenService) *DescribeService {
-	return &DescribeService{
-		config:       config,
-		tokenService: tokenService,
+func newDescribeService(http Doer, authHeaderProvider AuthHeaderProvider, baseURL string) *describeService {
+	return &describeService{
+		http:               http,
+		authHeaderProvider: authHeaderProvider,
+		baseURL:            baseURL,
 	}
 }
 
-//Model returns useful information about a Zuora Object
-func (s *DescribeService) Model(ctx context.Context, objectName ObjecName) (string, error) {
-	token, err := s.tokenService.Token(ctx)
+func (t *describeService) Model(ctx context.Context, objectName ObjecName) (string, error) {
+	authHeader, err := t.authHeaderProvider.AuthHeaders(ctx)
 
 	if err != nil {
-		return "", err
+		return "", responseError{isTemporary: false, message: fmt.Sprintf("error while trying to set auth headers: %v", err)}
 	}
 
-	url := fmt.Sprint(s.config.BaseURL, "/v1/describe/", objectName)
+	url := fmt.Sprintf("%v/v1/describe/%v", t.baseURL, objectName)
+
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 
 	if err != nil {
-		return "", err
+		return "", responseError{isTemporary: false, message: fmt.Sprintf("error while trying to create an HTTP request: %v", err)}
 	}
 
-	req.Header.Add("Authorization", fmt.Sprint("Bearer ", token.AccessToken))
+	req.Header.Add("Authorization", authHeader)
 	req.Header.Add("Content-Type", "application/json")
 
-	if ctx.Value("Zuora-Entity-Ids") != nil {
-		req.Header.Add("Zuora-Entity-Ids", ctx.Value("Zuora-Entity-Ids").(string))
+	if ctx.Value(ContextKeyZuoraEntityIds) != nil {
+		req.Header.Add("Zuora-Entity-Ids", ctx.Value(ContextKeyZuoraEntityIds).(string))
 	}
 
-	if ctx.Value("Zuora-Track-Id") != nil {
-		req.Header.Add("Zuora-Track-Id", ctx.Value("Zuora-Track-Id").(string))
+	if ctx.Value(ContextKeyZuoraTrackID) != nil {
+		req.Header.Add("Zuora-Track-Id", ctx.Value(ContextKeyZuoraTrackID).(string))
 	}
 
-	res, err := s.config.HTTPClient.Do(req)
-
-	if res != nil {
-		defer res.Body.Close()
+	if ctx.Value(ContextKeyZuoraVersion) != nil {
+		req.Header.Add("zuora-version", ctx.Value(ContextKeyZuoraVersion).(string))
 	}
+
+	res, err := t.http.Do(req.WithContext(ctx))
+	defer res.Body.Close()
 
 	if err != nil {
-		return "", err
+		return "", responseError{isTemporary: false, message: fmt.Sprintf("error while trying to make request: %v", err)}
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		return "", err
+		return "", responseError{isTemporary: false, message: fmt.Sprintf("error while trying to read body response into memory: %v", err)}
 	}
 
-	var objectAsXML object
+	if res.StatusCode < 200 || res.StatusCode > 299 {
+		var isTemporary bool
+		if http.StatusRequestTimeout == res.StatusCode ||
+			http.StatusTooManyRequests == res.StatusCode ||
+			http.StatusInternalServerError == res.StatusCode ||
+			http.StatusServiceUnavailable == res.StatusCode {
+			isTemporary = true
+		}
+
+		return "", responseError{isTemporary: isTemporary, message: fmt.Sprintf("error while trying to read body response into memory: %v", err)}
+	}
+
+	var objectAsXML xmlObject
 
 	if err := xml.Unmarshal(body, &objectAsXML); err != nil {
-		return "", err
+		return "", responseError{isTemporary: false, message: fmt.Sprintf("error while Unmarshal json response. Error: %v. JSON: %v", err, string(body))}
 	}
 
 	var b strings.Builder
 	fmt.Fprintf(&b, "type %v struct{\n", objectAsXML.Name)
 
 	for _, field := range objectAsXML.Fields.Fields {
-		currentType := getType(field.Type)
+		fmt.Println("Field types", field.Name, field.Type)
+		currentType := getType(field.Required, field.Type)
 		if field.Required {
 			fmt.Fprintf(&b, "%v\t%v\t`json:\"%v\"`\n", field.Name, currentType, field.Name)
 		} else {
@@ -111,79 +126,24 @@ func (s *DescribeService) Model(ctx context.Context, objectName ObjecName) (stri
 	return b.String(), nil
 }
 
-//ModelNonCustom returns only original fields in Zuora object
-func (s *DescribeService) ModelNonCustom(ctx context.Context, objectName ObjecName) (string, error) {
-	token, err := s.tokenService.Token(ctx)
-
-	if err != nil {
-		return "", err
-	}
-
-	url := fmt.Sprint(s.config.BaseURL, "/v1/describe/", objectName)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-
-	if err != nil {
-		return "", err
-	}
-
-	req.Header.Add("Authorization", fmt.Sprint("Bearer ", token.AccessToken))
-	req.Header.Add("Content-Type", "application/json")
-
-	if ctx.Value("Zuora-Entity-Ids") != nil {
-		req.Header.Add("Zuora-Entity-Ids", ctx.Value("Zuora-Entity-Ids").(string))
-	}
-
-	if ctx.Value("Zuora-Track-Id") != nil {
-		req.Header.Add("Zuora-Track-Id", ctx.Value("Zuora-Track-Id").(string))
-	}
-
-	res, err := s.config.HTTPClient.Do(req)
-
-	if res != nil {
-		defer res.Body.Close()
-	}
-
-	if err != nil {
-		return "", err
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
-
-	if err != nil {
-		return "", err
-	}
-
-	var objectAsXML object
-
-	if err := xml.Unmarshal(body, &objectAsXML); err != nil {
-		return "", err
-	}
-
-	var b strings.Builder
-	fmt.Fprintf(&b, "type %v struct{\n", objectAsXML.Name)
-
-	for _, field := range objectAsXML.Fields.Fields {
-		if field.Custom {
-			continue
-		}
-		currentType := getType(field.Type)
-		if field.Required {
-			fmt.Fprintf(&b, "%v\t%v\t`json:\"%v\"`\n", field.Name, currentType, field.Name)
-		} else {
-			fmt.Fprintf(&b, "%v\t%v\t`json:\"%v,omitempty\"`\n", field.Name, currentType, field.Name)
-		}
-	}
-
-	fmt.Fprint(&b, "}\n")
-	return b.String(), nil
-}
-
-func getType(fieldType string) string {
+func getType(fieldRequired bool, fieldType string) string {
+	var goType string
 	switch fieldType {
 	case "boolean":
-		return "bool"
+		goType = "bool"
 	case "picklist", "text":
-		return "string"
+		goType = "string"
+	case "integer":
+		goType = "int"
+	case "decimal":
+		goType = "float64"
+	default:
+		goType = "string"
 	}
-	return "string"
+
+	if fieldRequired {
+		return goType
+	}
+
+	return fmt.Sprintf("*%v", goType)
 }
