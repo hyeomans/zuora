@@ -1,9 +1,11 @@
 package zuora
 
 type V1 struct {
-	ActionsService  *actionsService
-	AccountsService *accountsService
-	CatalogService  *catalogService
+	ActionsService       *actionsService
+	AccountsService      *accountsService
+	CatalogService       *catalogService
+	SubscriptionsService *subscriptionsService
+	DescribeService      *describeService
 	// BillingDocumentsService *BillingDocumentsService
 	// ProductsService         *ProductsService
 	// ActionsService          *ActionsService
@@ -17,7 +19,8 @@ type V1 struct {
 
 //API is a container struct with access to all underlying services
 type API struct {
-	V1 V1
+	V1          V1
+	ObjectModel ObjectModel
 }
 
 //NewAPI helper function to create all required services to interact with Zuora
@@ -33,10 +36,13 @@ func NewAPI(httpClient Doer, authHeaderProvider AuthHeaderProvider, baseURL stri
 
 	return &API{
 		V1: V1{
-			ActionsService:  newActionsService(httpClient, authHeaderProvider, baseURL),
-			AccountsService: newAccountsService(httpClient, authHeaderProvider, baseURL),
-			CatalogService:  newCatalogService(httpClient, authHeaderProvider, baseURL),
+			ActionsService:       newActionsService(httpClient, authHeaderProvider, baseURL),
+			AccountsService:      newAccountsService(httpClient, authHeaderProvider, baseURL),
+			CatalogService:       newCatalogService(httpClient, authHeaderProvider, baseURL),
+			SubscriptionsService: newSubscriptionsService(httpClient, authHeaderProvider, baseURL),
+			DescribeService:      newDescribeService(httpClient, authHeaderProvider, baseURL),
 		},
+		ObjectModel: newObjectModel(),
 		// BillingDocumentsService: billingDocumentsService,
 		// ProductsService:         productsService,
 		// ActionsService:          actionsService,
