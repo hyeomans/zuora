@@ -1,132 +1,61 @@
 package zuora
 
-type SummaryResponse struct {
-	BasicInfo     SummaryBasicInfo      `json:"basicInfo"`
-	BillToContact SummaryContact        `json:"billToContact"`
-	Invoices      []SummaryInvoice      `json:"invoices"`
-	Payments      []SummaryPayment      `json:"payments"`
-	SoldToContact SummaryContact        `json:"soldToContact"`
-	Subscriptions []SummarySubscription `json:"subscriptions"`
-	Success       bool                  `json:"success"`
-	TaxInfo       SummaryTaxInfo        `json:"taxInfo"`
-	Usage         []SummaryUsage        `json:"usage"`
+// Account has all the possible properties given by Zuora. This comes from
+// the Describe endpoint.
+type Account struct {
+	ID                           *string  `json:"Id,omitempty"`
+	AccountNumber                *string  `json:"AccountNumber,omitempty"`
+	AdditionalEmailAddresses     *string  `json:"AdditionalEmailAddresses,omitempty"`
+	AllowInvoiceEdit             *bool    `json:"AllowInvoiceEdit,omitempty"`
+	AutoPay                      *bool    `json:"AutoPay,omitempty"`
+	Balance                      *float64 `json:"Balance,omitempty"`
+	Batch                        *string  `json:"Batch,omitempty"`
+	BcdSettingOption             string   `json:"BcdSettingOption"`
+	BillCycleDay                 int      `json:"BillCycleDay"`
+	BillToID                     *string  `json:"BillToId,omitempty"`
+	CommunicationProfileID       *string  `json:"CommunicationProfileId,omitempty"`
+	CreatedByID                  *string  `json:"CreatedById,omitempty"`
+	CreatedDate                  *string  `json:"CreatedDate,omitempty"`
+	CreditBalance                *float64 `json:"CreditBalance,omitempty"`
+	CrmID                        *string  `json:"CrmId,omitempty"`
+	Currency                     string   `json:"Currency"`
+	CustomerServiceRepName       *string  `json:"CustomerServiceRepName,omitempty"`
+	DefaultPaymentMethodID       *string  `json:"DefaultPaymentMethodId,omitempty"`
+	InvoiceDeliveryPrefsEmail    *bool    `json:"InvoiceDeliveryPrefsEmail,omitempty"`
+	InvoiceDeliveryPrefsPrint    *bool    `json:"InvoiceDeliveryPrefsPrint,omitempty"`
+	InvoiceTemplateID            *string  `json:"InvoiceTemplateId,omitempty"`
+	LastInvoiceDate              *string  `json:"LastInvoiceDate,omitempty"`
+	Mrr                          *float64 `json:"Mrr,omitempty"`
+	Name                         string   `json:"Name"`
+	Notes                        *string  `json:"Notes,omitempty"`
+	ParentID                     *string  `json:"ParentId,omitempty"`
+	PaymentGateway               *string  `json:"PaymentGateway,omitempty"`
+	PaymentTerm                  *string  `json:"PaymentTerm,omitempty"`
+	PurchaseOrderNumber          *string  `json:"PurchaseOrderNumber,omitempty"`
+	SalesRepName                 *string  `json:"SalesRepName,omitempty"`
+	SequenceSetID                *string  `json:"SequenceSetId,omitempty"`
+	SoldToID                     *string  `json:"SoldToId,omitempty"`
+	Status                       string   `json:"Status"`
+	TaxCompanyCode               *string  `json:"TaxCompanyCode,omitempty"`
+	TaxExemptCertificateID       *string  `json:"TaxExemptCertificateID,omitempty"`
+	TaxExemptCertificateType     *string  `json:"TaxExemptCertificateType,omitempty"`
+	TaxExemptDescription         *string  `json:"TaxExemptDescription,omitempty"`
+	TaxExemptEffectiveDate       *string  `json:"TaxExemptEffectiveDate,omitempty"`
+	TaxExemptEntityUseCode       *string  `json:"TaxExemptEntityUseCode,omitempty"`
+	TaxExemptExpirationDate      *string  `json:"TaxExemptExpirationDate,omitempty"`
+	TaxExemptIssuingJurisdiction *string  `json:"TaxExemptIssuingJurisdiction,omitempty"`
+	TaxExemptStatus              *string  `json:"TaxExemptStatus,omitempty"`
+	TotalDebitMemoBalance        *float64 `json:"TotalDebitMemoBalance,omitempty"`
+	TotalInvoiceBalance          *float64 `json:"TotalInvoiceBalance,omitempty"`
+	UnappliedBalance             float64  `json:"UnappliedBalance"`
+	UnappliedCreditMemoAmount    *float64 `json:"UnappliedCreditMemoAmount,omitempty"`
+	UpdatedByID                  *string  `json:"UpdatedById,omitempty"`
+	UpdatedDate                  *string  `json:"UpdatedDate,omitempty"`
+	VATId                        *string  `json:"VATId,omitempty"`
 }
 
-type SummaryContact struct {
-	Address1  string      `json:"address1"`
-	Address2  interface{} `json:"address2"`
-	City      string      `json:"city"`
-	Country   string      `json:"country"`
-	County    interface{} `json:"county"`
-	Fax       interface{} `json:"fax"`
-	FirstName string      `json:"firstName"`
-	ID        string      `json:"id"`
-	LastName  string      `json:"lastName"`
-	State     string      `json:"state"`
-	TaxRegion interface{} `json:"taxRegion"`
-	WorkEmail string      `json:"workEmail"`
-	WorkPhone interface{} `json:"workPhone"`
-	ZipCode   string      `json:"zipCode"`
-}
-
-type SummaryInvoice struct {
-	Amount        float64 `json:"amount"`
-	Balance       int64   `json:"balance"`
-	DueDate       string  `json:"dueDate"`
-	ID            string  `json:"id"`
-	InvoiceDate   string  `json:"invoiceDate"`
-	InvoiceNumber string  `json:"invoiceNumber"`
-	Status        string  `json:"status"`
-}
-
-type SummarySubscription struct {
-	CpqBundleJSONIDQT interface{} `json:"CpqBundleJsonId__QT"`
-
-	OpportunityCloseDateQT interface{} `json:"OpportunityCloseDate__QT"`
-	OpportunityNameQT      interface{} `json:"OpportunityName__QT"`
-
-	QuoteBusinessTypeQT interface{} `json:"QuoteBusinessType__QT"`
-	QuoteNumberQT       interface{} `json:"QuoteNumber__QT"`
-	QuoteTypeQT         interface{} `json:"QuoteType__QT"`
-
-	AutoRenew             bool              `json:"autoRenew"`
-	ID                    string            `json:"id"`
-	InitialTerm           interface{}       `json:"initialTerm"`
-	RatePlans             []SummaryRatePlan `json:"ratePlans"`
-	RenewalTerm           interface{}       `json:"renewalTerm"`
-	Status                string            `json:"status"`
-	SubscriptionNumber    string            `json:"subscriptionNumber"`
-	SubscriptionStartDate string            `json:"subscriptionStartDate"`
-	TermEndDate           interface{}       `json:"termEndDate"`
-	TermStartDate         string            `json:"termStartDate"`
-	TermType              string            `json:"termType"`
-}
-
-type SummaryPaidInvoice struct {
-	AppliedPaymentAmount float64 `json:"appliedPaymentAmount"`
-	InvoiceID            string  `json:"invoiceId"`
-	InvoiceNumber        string  `json:"invoiceNumber"`
-}
-
-type SummaryDefaultPaymentMethod struct {
-	CreditCardExpirationMonth int64  `json:"creditCardExpirationMonth"`
-	CreditCardExpirationYear  int64  `json:"creditCardExpirationYear"`
-	CreditCardNumber          string `json:"creditCardNumber"`
-	CreditCardType            string `json:"creditCardType"`
-	ID                        string `json:"id"`
-	PaymentMethodType         string `json:"paymentMethodType"`
-}
-
-type SummaryBasicInfo struct {
-	AccountNumber             string                      `json:"accountNumber"`
-	AdditionalEmailAddresses  []interface{}               `json:"additionalEmailAddresses"`
-	Balance                   int64                       `json:"balance"`
-	Batch                     string                      `json:"batch"`
-	BillCycleDay              int64                       `json:"billCycleDay"`
-	Currency                  string                      `json:"currency"`
-	DefaultPaymentMethod      SummaryDefaultPaymentMethod `json:"defaultPaymentMethod"`
-	ID                        string                      `json:"id"`
-	InvoiceDeliveryPrefsEmail bool                        `json:"invoiceDeliveryPrefsEmail"`
-	InvoiceDeliveryPrefsPrint bool                        `json:"invoiceDeliveryPrefsPrint"`
-	LastInvoiceDate           string                      `json:"lastInvoiceDate"`
-	LastPaymentAmount         float64                     `json:"lastPaymentAmount"`
-	LastPaymentDate           string                      `json:"lastPaymentDate"`
-	Name                      string                      `json:"name"`
-	Status                    string                      `json:"status"`
-}
-
-type SummaryPayment struct {
-	EffectiveDate string               `json:"effectiveDate"`
-	ID            string               `json:"id"`
-	PaidInvoices  []SummaryPaidInvoice `json:"paidInvoices"`
-	PaymentNumber string               `json:"paymentNumber"`
-	PaymentType   string               `json:"paymentType"`
-	Status        string               `json:"status"`
-}
-
-type SummaryRatePlan struct {
-	ProductID         string `json:"productId"`
-	ProductName       string `json:"productName"`
-	ProductRatePlanID string `json:"productRatePlanId"`
-	ProductSku        string `json:"productSku"`
-	RatePlanName      string `json:"ratePlanName"`
-}
-
-type SummaryUsage struct {
-	Quantity      string `json:"quantity"`
-	StartDate     string `json:"startDate"`
-	UnitOfMeasure string `json:"unitOfMeasure"`
-}
-
-type SummaryTaxInfo struct {
-	VATId                     string      `json:"VATId"`
-	CompanyCode               interface{} `json:"companyCode"`
-	ExemptCertificateID       interface{} `json:"exemptCertificateId"`
-	ExemptCertificateType     interface{} `json:"exemptCertificateType"`
-	ExemptDescription         interface{} `json:"exemptDescription"`
-	ExemptEffectiveDate       interface{} `json:"exemptEffectiveDate"`
-	ExemptEntityUseCode       interface{} `json:"exemptEntityUseCode"`
-	ExemptExpirationDate      interface{} `json:"exemptExpirationDate"`
-	ExemptIssuingJurisdiction interface{} `json:"exemptIssuingJurisdiction"`
-	ExemptStatus              interface{} `json:"exemptStatus"`
+// AccountUpdateResponse CRUD responses have this response.
+type AccountUpdateResponse struct {
+	Success bool   `json:"success"`
+	ID      string `json:"Id"`
 }
