@@ -53,12 +53,12 @@ func (t *accountsService) Get(ctx context.Context, accountKey string) ([]byte, e
 	}
 
 	res, err := t.http.Do(req.WithContext(ctx))
-	defer res.Body.Close()
 
 	if err != nil {
 		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to make request: %v", err)}
 	}
 
+	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
@@ -74,7 +74,7 @@ func (t *accountsService) Get(ctx context.Context, accountKey string) ([]byte, e
 			isTemporary = true
 		}
 
-		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error while trying to read body response into memory: %v", string(body))}
+		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error on HTTP request. Response code: %v - Error message %v", res.StatusCode, string(body))}
 	}
 
 	jsonResponse := Response{}
@@ -130,12 +130,12 @@ func (t *accountsService) Summary(ctx context.Context, objectID string) ([]byte,
 	}
 
 	res, err := t.http.Do(req.WithContext(ctx))
-	defer res.Body.Close()
 
 	if err != nil {
 		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to make request: %v", err)}
 	}
 
+	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
@@ -151,7 +151,7 @@ func (t *accountsService) Summary(ctx context.Context, objectID string) ([]byte,
 			isTemporary = true
 		}
 
-		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error while trying to read body response into memory: %v", string(body))}
+		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error on HTTP request. Response code: %v - Error message %v", res.StatusCode, string(body))}
 	}
 
 	jsonResponse := Response{}
@@ -173,86 +173,26 @@ func (t *accountsService) Summary(ctx context.Context, objectID string) ([]byte,
 	return body, nil
 }
 
-// CrudGet Retrieves the information about one specific account.
-// ObjectID is the internal ID of an account. This ID was given by Zuora when creating the Account.
-// NOTE: Why return a raw array of bytes? You can take advantage of binding to your custom struct with custom properties.
-func (t *accountsService) CrudGet(ctx context.Context, objectID string) ([]byte, error) {
+// Update - Updates a customer account by specifying the account-key.
+func (t *accountsService) Update(ctx context.Context, objectID string, account interface{}) (Response, error) {
 	authHeader, err := t.authHeaderProvider.AuthHeaders(ctx)
 
 	if err != nil {
-		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to set auth headers: %v", err)}
+		return Response{}, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to set auth headers: %v", err)}
 	}
 
-	url := fmt.Sprintf("%v/v1/object/account/%v", t.baseURL, objectID)
-
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-
-	if err != nil {
-		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to create an HTTP request: %v", err)}
-	}
-
-	req.Header.Add("Authorization", authHeader)
-	req.Header.Add("Content-Type", "application/json")
-
-	if ctx.Value(ContextKeyZuoraEntityIds) != nil {
-		req.Header.Add("Zuora-Entity-Ids", ctx.Value(ContextKeyZuoraEntityIds).(string))
-	}
-
-	if ctx.Value(ContextKeyZuoraTrackID) != nil {
-		req.Header.Add("Zuora-Track-Id", ctx.Value(ContextKeyZuoraTrackID).(string))
-	}
-
-	res, err := t.http.Do(req.WithContext(ctx))
-	defer res.Body.Close()
-
-	if err != nil {
-		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to make request: %v", err)}
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
-
-	if err != nil {
-		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to read body response into memory: %v", err)}
-	}
-
-	if res.StatusCode < 200 || res.StatusCode > 299 {
-		var isTemporary bool
-		if http.StatusRequestTimeout == res.StatusCode ||
-			http.StatusTooManyRequests == res.StatusCode ||
-			http.StatusInternalServerError == res.StatusCode ||
-			http.StatusServiceUnavailable == res.StatusCode {
-			isTemporary = true
-		}
-
-		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error while trying to read body response into memory. Response code: %v - Error message %v", res.StatusCode, string(body))}
-	}
-
-	//This call does not follow the Success response from Zuora.
-	return body, nil
-}
-
-// CrudUpdate Updates an account given an objectID. This objectID is the internal ID given by Zuora to an account. The easiest
-// way to get this id is to query an account summary first, grab the id from there.
-// NOTE: Why return a raw array of bytes? You can take advantage of binding to your custom struct with custom properties.
-func (t *accountsService) CrudUpdate(ctx context.Context, objectID string, account interface{}) (*AccountUpdateResponse, error) {
-	authHeader, err := t.authHeaderProvider.AuthHeaders(ctx)
-
-	if err != nil {
-		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to set auth headers: %v", err)}
-	}
-
-	url := fmt.Sprintf("%v/v1/object/account/%v", t.baseURL, objectID)
+	url := fmt.Sprintf("%v/v1/accounts/%v", t.baseURL, objectID)
 
 	j, err := json.Marshal(account)
 
 	if err != nil {
-		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to convert empty interface: %v", err)}
+		return Response{}, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to convert empty interface: %v", err)}
 	}
 
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(j))
 
 	if err != nil {
-		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to create an HTTP request: %v", err)}
+		return Response{}, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to create an HTTP request: %v", err)}
 	}
 
 	req.Header.Add("Authorization", authHeader)
@@ -267,16 +207,16 @@ func (t *accountsService) CrudUpdate(ctx context.Context, objectID string, accou
 	}
 
 	res, err := t.http.Do(req.WithContext(ctx))
-	defer res.Body.Close()
 
 	if err != nil {
-		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to make request: %v", err)}
+		return Response{}, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to make request: %v", err)}
 	}
 
+	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to read body response into memory: %v", err)}
+		return Response{}, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to read body response into memory: %v", err)}
 	}
 
 	if res.StatusCode < 200 || res.StatusCode > 299 {
@@ -288,14 +228,24 @@ func (t *accountsService) CrudUpdate(ctx context.Context, objectID string, accou
 			isTemporary = true
 		}
 
-		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error on HTTP request. Response code: %v - Error message %v", res.StatusCode, string(body))}
+		return Response{}, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error on HTTP request. Response code: %v - Error message %v", res.StatusCode, string(body))}
 	}
 
-	updateResponse := AccountUpdateResponse{}
+	jsonResponse := Response{}
 
-	if err = json.Unmarshal(body, &updateResponse); err != nil {
-		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to parse response. Response code: %v - Error message %v", res.StatusCode, err)}
+	if err := json.Unmarshal(body, &jsonResponse); err != nil {
+		return Response{}, responseError{isTemporary: false, message: fmt.Sprintf("error while Unmarshal json response. Error: %v. JSON: %v", err, string(body))}
 	}
 
-	return &updateResponse, nil
+	if !jsonResponse.Success {
+		errorResponse := errorResponse{}
+
+		if err := json.Unmarshal(body, &errorResponse); err != nil {
+			return Response{}, responseError{isTemporary: false, message: fmt.Sprintf("error while Unmarshal json error response. Error: %v. Raw JSON: %v", err, string(body))}
+		}
+
+		return Response{}, errorResponse
+	}
+
+	return jsonResponse, nil
 }

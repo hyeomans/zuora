@@ -3,59 +3,101 @@ package zuora
 // Account has all the possible properties given by Zuora. This comes from
 // the Describe endpoint.
 type Account struct {
-	ID                           *string  `json:"Id,omitempty"`
-	AccountNumber                *string  `json:"AccountNumber,omitempty"`
-	AdditionalEmailAddresses     *string  `json:"AdditionalEmailAddresses,omitempty"`
-	AllowInvoiceEdit             *bool    `json:"AllowInvoiceEdit,omitempty"`
-	AutoPay                      *bool    `json:"AutoPay,omitempty"`
-	Balance                      *float64 `json:"Balance,omitempty"`
-	Batch                        *string  `json:"Batch,omitempty"`
-	BcdSettingOption             string   `json:"BcdSettingOption"`
-	BillCycleDay                 int      `json:"BillCycleDay"`
-	BillToID                     *string  `json:"BillToId,omitempty"`
-	CommunicationProfileID       *string  `json:"CommunicationProfileId,omitempty"`
-	CreatedByID                  *string  `json:"CreatedById,omitempty"`
-	CreatedDate                  *string  `json:"CreatedDate,omitempty"`
-	CreditBalance                *float64 `json:"CreditBalance,omitempty"`
-	CrmID                        *string  `json:"CrmId,omitempty"`
-	Currency                     string   `json:"Currency"`
-	CustomerServiceRepName       *string  `json:"CustomerServiceRepName,omitempty"`
-	DefaultPaymentMethodID       *string  `json:"DefaultPaymentMethodId,omitempty"`
-	InvoiceDeliveryPrefsEmail    *bool    `json:"InvoiceDeliveryPrefsEmail,omitempty"`
-	InvoiceDeliveryPrefsPrint    *bool    `json:"InvoiceDeliveryPrefsPrint,omitempty"`
-	InvoiceTemplateID            *string  `json:"InvoiceTemplateId,omitempty"`
-	LastInvoiceDate              *string  `json:"LastInvoiceDate,omitempty"`
-	Mrr                          *float64 `json:"Mrr,omitempty"`
-	Name                         string   `json:"Name"`
-	Notes                        *string  `json:"Notes,omitempty"`
-	ParentID                     *string  `json:"ParentId,omitempty"`
-	PaymentGateway               *string  `json:"PaymentGateway,omitempty"`
-	PaymentTerm                  *string  `json:"PaymentTerm,omitempty"`
-	PurchaseOrderNumber          *string  `json:"PurchaseOrderNumber,omitempty"`
-	SalesRepName                 *string  `json:"SalesRepName,omitempty"`
-	SequenceSetID                *string  `json:"SequenceSetId,omitempty"`
-	SoldToID                     *string  `json:"SoldToId,omitempty"`
-	Status                       string   `json:"Status"`
-	TaxCompanyCode               *string  `json:"TaxCompanyCode,omitempty"`
-	TaxExemptCertificateID       *string  `json:"TaxExemptCertificateID,omitempty"`
-	TaxExemptCertificateType     *string  `json:"TaxExemptCertificateType,omitempty"`
-	TaxExemptDescription         *string  `json:"TaxExemptDescription,omitempty"`
-	TaxExemptEffectiveDate       *string  `json:"TaxExemptEffectiveDate,omitempty"`
-	TaxExemptEntityUseCode       *string  `json:"TaxExemptEntityUseCode,omitempty"`
-	TaxExemptExpirationDate      *string  `json:"TaxExemptExpirationDate,omitempty"`
-	TaxExemptIssuingJurisdiction *string  `json:"TaxExemptIssuingJurisdiction,omitempty"`
-	TaxExemptStatus              *string  `json:"TaxExemptStatus,omitempty"`
-	TotalDebitMemoBalance        *float64 `json:"TotalDebitMemoBalance,omitempty"`
-	TotalInvoiceBalance          *float64 `json:"TotalInvoiceBalance,omitempty"`
-	UnappliedBalance             float64  `json:"UnappliedBalance"`
-	UnappliedCreditMemoAmount    *float64 `json:"UnappliedCreditMemoAmount,omitempty"`
-	UpdatedByID                  *string  `json:"UpdatedById,omitempty"`
-	UpdatedDate                  *string  `json:"UpdatedDate,omitempty"`
-	VATId                        *string  `json:"VATId,omitempty"`
+	ID            *string `json:"id,omitempty"`
+	AccountNumber *string `json:"accountNumber,omitempty"`
+	// AdditionalEmailAddresses show as part of GetById response as a string but
+	// as an array in Get response but inside `billingAndPayment`.
+	// TODO: Check with ZOQL
+	// AdditionalEmailAddresses     *string  `json:"additionalEmailAddresses,omitempty"`
+	AllowInvoiceEdit             *bool    `json:"allowInvoiceEdit,omitempty"`
+	AutoPay                      *bool    `json:"autoPay,omitempty"`
+	Balance                      *float64 `json:"balance,omitempty"`
+	Batch                        *string  `json:"batch,omitempty"`
+	BcdSettingOption             string   `json:"bcdSettingOption"`
+	BillCycleDay                 int      `json:"billCycleDay"`
+	BillToID                     *string  `json:"billToId,omitempty"`
+	CommunicationProfileID       *string  `json:"communicationProfileId,omitempty"`
+	CreatedByID                  *string  `json:"createdById,omitempty"`
+	CreatedDate                  *string  `json:"createdDate,omitempty"`
+	CreditBalance                *float64 `json:"creditBalance,omitempty"`
+	CrmID                        *string  `json:"crmId,omitempty"`
+	Currency                     string   `json:"currency"`
+	CustomerServiceRepName       *string  `json:"customerServiceRepName,omitempty"`
+	DefaultPaymentMethodID       *string  `json:"defaultPaymentMethodId,omitempty"`
+	InvoiceDeliveryPrefsEmail    *bool    `json:"invoiceDeliveryPrefsEmail,omitempty"`
+	InvoiceDeliveryPrefsPrint    *bool    `json:"invoiceDeliveryPrefsPrint,omitempty"`
+	InvoiceTemplateID            *string  `json:"invoiceTemplateId,omitempty"`
+	LastInvoiceDate              *string  `json:"lastInvoiceDate,omitempty"`
+	Mrr                          *float64 `json:"mrr,omitempty"`
+	Name                         string   `json:"name"`
+	Notes                        *string  `json:"notes,omitempty"`
+	ParentID                     *string  `json:"parentId,omitempty"`
+	PaymentGateway               *string  `json:"paymentGateway,omitempty"`
+	PaymentTerm                  *string  `json:"paymentTerm,omitempty"`
+	PurchaseOrderNumber          *string  `json:"purchaseOrderNumber,omitempty"`
+	SalesRepName                 *string  `json:"salesRepName,omitempty"`
+	SequenceSetID                *string  `json:"sequenceSetId,omitempty"`
+	SoldToID                     *string  `json:"soldToId,omitempty"`
+	Status                       string   `json:"status"`
+	TaxCompanyCode               *string  `json:"taxCompanyCode,omitempty"`
+	TaxExemptCertificateID       *string  `json:"taxExemptCertificateID,omitempty"`
+	TaxExemptCertificateType     *string  `json:"taxExemptCertificateType,omitempty"`
+	TaxExemptDescription         *string  `json:"taxExemptDescription,omitempty"`
+	TaxExemptEffectiveDate       *string  `json:"taxExemptEffectiveDate,omitempty"`
+	TaxExemptEntityUseCode       *string  `json:"taxExemptEntityUseCode,omitempty"`
+	TaxExemptExpirationDate      *string  `json:"taxExemptExpirationDate,omitempty"`
+	TaxExemptIssuingJurisdiction *string  `json:"taxExemptIssuingJurisdiction,omitempty"`
+	TaxExemptStatus              *string  `json:"taxExemptStatus,omitempty"`
+	TotalDebitMemoBalance        *float64 `json:"totalDebitMemoBalance,omitempty"`
+	TotalInvoiceBalance          *float64 `json:"totalInvoiceBalance,omitempty"`
+	UnappliedBalance             float64  `json:"unappliedBalance"`
+	UnappliedCreditMemoAmount    *float64 `json:"unappliedCreditMemoAmount,omitempty"`
+	UpdatedByID                  *string  `json:"updatedById,omitempty"`
+	UpdatedDate                  *string  `json:"updatedDate,omitempty"`
+	VATId                        *string  `json:"vatId,omitempty"`
+}
+
+// AccountUpdate has all the possible properties given by Zuora. This comes from
+// the Describe endpoint.
+type AccountUpdate struct {
+	AdditionalEmailAddresses  []string              `json:"additionalEmailAddresses,omitempty"`
+	AutoPay                   *bool                 `json:"autoPay,omitempty"`
+	Batch                     *string               `json:"batch,omitempty"`
+	BillToContact             *Contact              `json:"billToContact,omitempty"`
+	CommunicationProfileID    *string               `json:"communicationProfileId,omitempty"`
+	CreditMemoTemplateID      *string               `json:"creditMemoTemplateId,omitempty"`
+	CrmID                     *string               `json:"crmId,omitempty"`
+	DebitMemoTemplateID       *string               `json:"debitMemoTemplateId,omitempty"`
+	InvoiceDeliveryPrefsEmail *bool                 `json:"invoiceDeliveryPrefsEmail,omitempty"`
+	InvoiceDeliveryPrefsPrint *bool                 `json:"invoiceDeliveryPrefsPrint,omitempty"`
+	InvoiceTemplateID         *string               `json:"invoiceTemplateId,omitempty"`
+	Name                      string                `json:"name,omitempty"`
+	Notes                     *string               `json:"notes,omitempty"`
+	ParentID                  *string               `json:"parentId,omitempty"`
+	PaymentGateway            *string               `json:"paymentGateway,omitempty"`
+	SalesRepName              *string               `json:"salesRepName,omitempty"`
+	SequenceSetID             *string               `json:"sequenceSetId,omitempty"`
+	SoldToContact             *Contact              `json:"soldToContact,omitempty"`
+	Tagging                   *string               `json:"tagging,omitempty"`
+	TaxInfo                   *AccountUpdateTaxInfo `json:"taxInfo,omitempty"`
+}
+
+// AccountUpdateTaxInfo Container for tax exempt information, used to establish the tax exempt status of a customer account.
+type AccountUpdateTaxInfo struct {
+	VATId                     *string `json:"vatId,omitempty"`
+	CompanyCode               *string `json:"companyCode,omitempty"`
+	ExemptCertificateID       *string `json:"exemptCertificateID,omitempty"`
+	ExemptCertificateType     *string `json:"exemptCertificateType,omitempty"`
+	ExemptDescription         *string `json:"exemptDescription,omitempty"`
+	ExemptEffectiveDate       *string `json:"exemptEffectiveDate,omitempty"`
+	ExemptEntityUseCode       *string `json:"exemptEntityUseCode,omitempty"`
+	ExemptExpirationDate      *string `json:"exemptExpirationDate,omitempty"`
+	ExemptIssuingJurisdiction *string `json:"exemptIssuingJurisdiction,omitempty"`
+	ExemptStatus              *string `json:"exemptStatus,omitempty"`
 }
 
 // AccountUpdateResponse CRUD responses have this response.
 type AccountUpdateResponse struct {
 	Success bool   `json:"success"`
-	ID      string `json:"Id"`
+	ID      string `json:"id"`
 }

@@ -11,6 +11,9 @@ import (
 	"strings"
 )
 
+// AuthHeaderProvider an interface that defines
+// a common get method for different types of Authentication
+// for Zuora.
 type AuthHeaderProvider interface {
 	AuthHeaders(ctx context.Context) (string, error)
 }
@@ -32,20 +35,26 @@ type Token struct {
 	Jti         string `json:"jti"`
 }
 
+// BasicAuthHeader represents a basic HTTP auth header
+// holder.
 type BasicAuthHeader struct {
 	clientID     string
 	clientSecret string
 }
 
+// NewBasicAuthHeader initialize with clientID & clientSecret from Zuora.
 func NewBasicAuthHeader(clientID, clientSecret string) *BasicAuthHeader {
 	return &BasicAuthHeader{clientID: clientID, clientSecret: clientID}
 }
 
+// AuthHeaders returns a string that will be added to each request going out
+// to Zuora
 func (t *BasicAuthHeader) AuthHeaders(ctx context.Context) (string, error) {
 	toEncode := fmt.Sprintf("%v:%v", t.clientID, t.clientSecret)
 	return fmt.Sprintf("Basic %v", b64.StdEncoding.EncodeToString([]byte(toEncode))), nil
 }
 
+// OAuthHeader is the holder of information to retrieve an OAuth token from Zuora
 type OAuthHeader struct {
 	clientID     string
 	clientSecret string
@@ -54,6 +63,7 @@ type OAuthHeader struct {
 	tokenStorer  TokenStorer
 }
 
+// NewOAuthHeader initialize OAuthHeader struct with information coming from Zuora.
 func NewOAuthHeader(doer Doer, tokenStorer TokenStorer, clientID, clientSecret, baseURL string) *OAuthHeader {
 	return &OAuthHeader{
 		http:         doer,
@@ -64,6 +74,8 @@ func NewOAuthHeader(doer Doer, tokenStorer TokenStorer, clientID, clientSecret, 
 	}
 }
 
+// AuthHeaders returns a string that will be added to each request going out
+// to Zuora.
 func (t *OAuthHeader) AuthHeaders(ctx context.Context) (string, error) {
 	isValid, token := t.tokenStorer.Token()
 
@@ -91,10 +103,14 @@ func (t *OAuthHeader) AuthHeaders(ctx context.Context) (string, error) {
 	res, err := t.http.Do(req.WithContext(ctx))
 
 	if err != nil {
-		return "", responseError{isTemporary: false, message: fmt.Sprintf("error while executing an HTTP request: %v", err)}
+		return "", responseError{isTemporary: false, message: fmt.Sprintf("error while trying to make request: %v", err)}
 	}
 
 	defer res.Body.Close()
+
+	if err != nil {
+		return "", responseError{isTemporary: false, message: fmt.Sprintf("error while trying to make request: %v", err)}
+	}
 
 	body, err := ioutil.ReadAll(res.Body)
 

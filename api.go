@@ -1,20 +1,13 @@
 package zuora
 
+// V1 All the available REST endpoints in Zuora
 type V1 struct {
 	ActionsService       *actionsService
 	AccountsService      *accountsService
 	CatalogService       *catalogService
 	SubscriptionsService *subscriptionsService
 	DescribeService      *describeService
-	// BillingDocumentsService *BillingDocumentsService
-	// ProductsService         *ProductsService
-	// ActionsService          *ActionsService
-	// DescribeService         *DescribeService
-	// ProductRatePlansService *ProductRatePlansService
-	// AccountsService         *AccountsService
-	// SubscriptionsService    *SubscriptionsService
-	// PaymentsService         *PaymentsService
-	// ObjectModel             ObjectModel
+	PaymentMethods       *paymentMethods
 }
 
 //API is a container struct with access to all underlying services
@@ -25,15 +18,6 @@ type API struct {
 
 //NewAPI helper function to create all required services to interact with Zuora
 func NewAPI(httpClient Doer, authHeaderProvider AuthHeaderProvider, baseURL string) *API {
-	// billingDocumentsService := newBillingDocumentsService(zuoraConfig, tokenService, errorRequestHandler)
-	// productsService := newProductsService(zuoraConfig, tokenService, actionsService, errorRequestHandler)
-	// accountsService := newAccountsService(zuoraConfig, tokenService, actionsService, errorRequestHandler)
-	// subscriptionsService := newSubscriptionsService(zuoraConfig, tokenService, actionsService, errorRequestHandler)
-	// paymentsService := newPaymentsService(zuoraConfig, tokenService, actionsService, errorRequestHandler)
-	// productRatePlansService := newProductRatePlansService(zuoraConfig, tokenService, actionsService, errorRequestHandler)
-	// objectModel := newObjectModel()
-	// describeService := newDescribeService(zuoraConfig, tokenService)
-
 	return &API{
 		V1: V1{
 			ActionsService:       newActionsService(httpClient, authHeaderProvider, baseURL),
@@ -41,16 +25,8 @@ func NewAPI(httpClient Doer, authHeaderProvider AuthHeaderProvider, baseURL stri
 			CatalogService:       newCatalogService(httpClient, authHeaderProvider, baseURL),
 			SubscriptionsService: newSubscriptionsService(httpClient, authHeaderProvider, baseURL),
 			DescribeService:      newDescribeService(httpClient, authHeaderProvider, baseURL),
+			PaymentMethods:       newPaymentMethods(httpClient, authHeaderProvider, baseURL),
 		},
 		ObjectModel: newObjectModel(),
-		// BillingDocumentsService: billingDocumentsService,
-		// ProductsService:         productsService,
-		// ActionsService:          actionsService,
-		// DescribeService:         describeService,
-		// ProductRatePlansService: productRatePlansService,
-		// AccountsService:         accountsService,
-		// SubscriptionsService:    subscriptionsService,
-		// PaymentsService:         paymentsService,
-		// ObjectModel:             objectModel,
 	}
 }
