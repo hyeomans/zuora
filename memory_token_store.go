@@ -10,6 +10,7 @@ import (
 type MemoryTokenStore struct {
 	token *Token
 	sync.RWMutex
+	expiration time.Time
 }
 
 // Token Stores token in memory
@@ -17,7 +18,7 @@ func (m *MemoryTokenStore) Token() (bool, *Token) {
 	m.RLock()
 	defer m.RUnlock()
 	if m.token != nil {
-		expired := time.Now().UTC().Sub(time.Now().UTC().Add(time.Duration(m.token.ExpiresIn-100)*time.Second)) > 0
+		expired := time.Now().UTC().After(m.expiration)
 		if !expired {
 			return true, m.token
 		}
@@ -30,5 +31,6 @@ func (m *MemoryTokenStore) Token() (bool, *Token) {
 func (m *MemoryTokenStore) Update(token *Token) {
 	m.Lock()
 	defer m.Unlock()
+	m.expiration = time.Now().UTC().Add(time.Duration(token.ExpiresIn) * time.Second)
 	m.token = token
 }
