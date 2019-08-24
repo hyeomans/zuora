@@ -22,7 +22,7 @@ func newCatalogService(http Doer, authHeaderProvider AuthHeaderProvider, baseURL
 	}
 }
 
-func (t *catalogService) GetProduct(ctx context.Context, pageSize int) (*ProductsResponse, error) {
+func (t *catalogService) GetProduct(ctx context.Context, pageSize int) ([]byte, error) {
 	authHeader, err := t.authHeaderProvider.AuthHeaders(ctx)
 
 	if err != nil {
@@ -59,6 +59,10 @@ func (t *catalogService) GetProduct(ctx context.Context, pageSize int) (*Product
 	res, err := t.http.Do(req.WithContext(ctx))
 	defer res.Body.Close()
 
+	if err != nil {
+		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to make request: %v", err)}
+	}
+
 	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
@@ -74,10 +78,10 @@ func (t *catalogService) GetProduct(ctx context.Context, pageSize int) (*Product
 			isTemporary = true
 		}
 
-		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error while trying to read body response into memory: %v", err)}
+		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error on HTTP request. Response code: %v - Error message %v", res.StatusCode, string(body))}
 	}
 
-	jsonResponse := ProductsResponse{}
+	jsonResponse := Response{}
 
 	if err := json.Unmarshal(body, &jsonResponse); err != nil {
 		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while Unmarshal json response. Error: %v. JSON: %v", err, string(body))}
@@ -93,10 +97,10 @@ func (t *catalogService) GetProduct(ctx context.Context, pageSize int) (*Product
 		return nil, errorResponse
 	}
 
-	return &jsonResponse, nil
+	return body, nil
 }
 
-func (t *catalogService) GetProductNextPage(ctx context.Context, nextPageURI string) (*ProductsResponse, error) {
+func (t *catalogService) GetProductNextPage(ctx context.Context, nextPageURI string) ([]byte, error) {
 	authHeader, err := t.authHeaderProvider.AuthHeaders(ctx)
 
 	if err != nil {
@@ -129,6 +133,10 @@ func (t *catalogService) GetProductNextPage(ctx context.Context, nextPageURI str
 	res, err := t.http.Do(req.WithContext(ctx))
 	defer res.Body.Close()
 
+	if err != nil {
+		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to make request: %v", err)}
+	}
+
 	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
@@ -144,10 +152,10 @@ func (t *catalogService) GetProductNextPage(ctx context.Context, nextPageURI str
 			isTemporary = true
 		}
 
-		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error while trying to read body response into memory: %v", err)}
+		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error on HTTP request. Response code: %v - Error message %v", res.StatusCode, string(body))}
 	}
 
-	jsonResponse := ProductsResponse{}
+	jsonResponse := Response{}
 
 	if err := json.Unmarshal(body, &jsonResponse); err != nil {
 		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while Unmarshal json response. Error: %v. JSON: %v", err, string(body))}
@@ -163,5 +171,5 @@ func (t *catalogService) GetProductNextPage(ctx context.Context, nextPageURI str
 		return nil, errorResponse
 	}
 
-	return &jsonResponse, nil
+	return body, nil
 }

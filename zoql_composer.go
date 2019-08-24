@@ -1,5 +1,6 @@
 package zuora
 
+//TODO: Make this easier to use
 import (
 	"bytes"
 	"fmt"

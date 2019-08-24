@@ -5,11 +5,14 @@ import (
 	"time"
 )
 
+// MemoryTokenStore a simple token storer to avoid creating
+// a new token on each request.
 type MemoryTokenStore struct {
 	token *Token
 	sync.RWMutex
 }
 
+// Token Stores token in memory
 func (m *MemoryTokenStore) Token() (bool, *Token) {
 	m.RLock()
 	defer m.RUnlock()
@@ -23,6 +26,7 @@ func (m *MemoryTokenStore) Token() (bool, *Token) {
 	return false, nil
 }
 
+// Update updates token in memory
 func (m *MemoryTokenStore) Update(token *Token) {
 	m.Lock()
 	defer m.Unlock()
