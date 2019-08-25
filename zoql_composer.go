@@ -1,98 +1,91 @@
 package zuora
 
-//TODO: Make this easier to use
 import (
 	"bytes"
 	"fmt"
 	"strings"
 )
 
-//ZoqlComposer helper struct to build a zoql query
 type ZoqlComposer struct {
-	Table     string
-	Fields    []string
-	Filter    QueryFilter
-	OrFilter  []QueryFilter
-	AndFilter []QueryFilter
+	table  string
+	fields []string
+	where  string
+	and    string
+	or     string
 }
 
-//QueryFilter key/value combination that represent filters.
-type QueryFilter struct {
-	Key   string
-	Value string
+func NewZoqlComposer() ZoqlComposer {
+	return ZoqlComposer{}
 }
 
-//ZoqlComposerOption using functional options to construct a query
-type ZoqlComposerOption func(*ZoqlComposer)
+func (z ZoqlComposer) Fields(fields ...string) ZoqlComposer {
+	z.fields = fields
+	return z
+}
 
-//NewZoqlComposer helper function to get a ready ZoqlComposer struct
-func NewZoqlComposer(table string, fields []string, zoqlComposerOption ...ZoqlComposerOption) *ZoqlComposer {
-	//TODO: Validate table and fields
-	zoqlComposer := &ZoqlComposer{
-		Table:  table,
-		Fields: fields,
+func (z ZoqlComposer) From(table string) ZoqlComposer {
+	if len(z.fields) == 0 {
+		//TODO: An error here
 	}
 
-	for _, option := range zoqlComposerOption {
-		option(zoqlComposer)
-	}
-
-	return zoqlComposer
+	z.table = table
+	return z
 }
 
-//QueryWithFilter add a single filter to query
-func QueryWithFilter(filter QueryFilter) ZoqlComposerOption {
-	return func(zoqlComposer *ZoqlComposer) {
-		zoqlComposer.Filter = filter
+func (z ZoqlComposer) Where(key, value string) ZoqlComposer {
+	if z.table == "" {
+		//TODO: An error here
 	}
+
+	z.where = fmt.Sprintf(` where %v = '%v'`, key, value)
+	return z
 }
 
-//QueryWithOrFilter adds an OR filter to query
-func QueryWithOrFilter(orFilter []QueryFilter) ZoqlComposerOption {
-	return func(zoqlComposer *ZoqlComposer) {
-		zoqlComposer.OrFilter = orFilter
+func (z ZoqlComposer) And(key, value string) ZoqlComposer {
+	if z.where == "" {
+		//TODO: An error here
 	}
+
+	if z.and != "" {
+		z.and = fmt.Sprintf("%v and %v = '%v'", z.and, key, value)
+	} else {
+		z.and = fmt.Sprintf(" and %v = '%v'", key, value)
+	}
+
+	return z
 }
 
-//QueryWithAndFilter adds an AND filter to final query
-func QueryWithAndFilter(andFilter []QueryFilter) ZoqlComposerOption {
-	return func(zoqlComposer *ZoqlComposer) {
-		zoqlComposer.AndFilter = andFilter
+func (z ZoqlComposer) Or(key, value string) ZoqlComposer {
+	if z.where == "" {
+		//TODO: An error here
 	}
+
+	if z.or != "" {
+		z.or = fmt.Sprintf("%v or %v = '%v'", z.and, key, value)
+	} else {
+		z.or = fmt.Sprintf(" or %v = '%v'", key, value)
+	}
+
+	return z
 }
 
-//Build going away
-func (q *ZoqlComposer) Build() string {
+func (z ZoqlComposer) Build() string {
+	//TODO: Check minimum strings
 	var buffer bytes.Buffer
 	buffer.WriteString(`{ "queryString" : "select %v from %v`)
 
-	if q.Filter.Key != "" {
-		buffer.WriteString(fmt.Sprintf(" where %v = '%v'", q.Filter.Key, q.Filter.Value))
+	if z.where != "" {
+		buffer.WriteString(z.where)
 	}
 
-	if len(q.AndFilter) > 0 {
-		andFilter := buildFilter(q.AndFilter, "and")
-		buffer.WriteString(andFilter)
+	if z.and != "" {
+		buffer.WriteString(z.and)
 	}
 
-	if len(q.OrFilter) > 0 {
-		orFilter := buildFilter(q.OrFilter, "or")
-		buffer.WriteString(orFilter)
+	if z.or != "" {
+		buffer.WriteString(z.or)
 	}
 
 	buffer.WriteString(`" }`)
-	return fmt.Sprintf(buffer.String(), strings.Join(q.Fields, ", "), q.Table)
-}
-
-func buildFilter(filters []QueryFilter, separator string) string {
-	var buffer bytes.Buffer
-	for _, filter := range filters {
-		buffer.WriteString(fmt.Sprintf(" %v %v = '%v'", separator, filter.Key, filter.Value))
-	}
-
-	return buffer.String()
-}
-
-func (q *ZoqlComposer) String() string {
-	return q.Build()
+	return fmt.Sprintf(buffer.String(), strings.Join(z.fields, ", "), z.table)
 }

@@ -410,17 +410,11 @@ func main() {
 	zuoraOAuthHeaderProvider := zuora.NewOAuthHeader(httpClient, &zuora.MemoryTokenStore{}, zuoraClientID, zuoraClientSecret, zuoraURL)
 	zuoraAPI := zuora.NewAPI(httpClient, zuoraOAuthHeaderProvider, zuoraURL)
 
-	fields := []string{"Name"}
-	statusFilter := zuora.QueryFilter{Key: "status", Value: "cancelled"}
-	termEndDateFilter := zuora.QueryFilter{Key: "termEndDate", Value: time.Now().UTC().Format("2006-01-02")}
-	andFilter := []zuora.QueryFilter{termEndDateFilter}
-	addStatusFilter := zuora.QueryWithFilter(statusFilter)
-	addTermEndDateFilter := zuora.QueryWithAndFilter(andFilter)
+	zoql := zuora.NewZoqlComposer().
+		Fields("Name").From("Subscription").
+		Where("status", "cancelled").
+		And("termEndDate", time.Now().UTC().Format("2006-01-02"))
 
-	zoql := zuora.NewZoqlComposer("Subscription", fields)
-	addStatusFilter(zoql)
-	addTermEndDateFilter(zoql)
-	fmt.Println(zoql.String())
 	t, err := zuoraAPI.V1.ActionsService.Query(ctx, zoql)
 
 	if err != nil {
