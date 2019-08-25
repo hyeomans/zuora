@@ -4,12 +4,22 @@ A Go client library to consume [Zuora API](https://www.zuora.com/developer/api-r
 
 This is a __WIP__ and has minimal endpoints covered but it is really easy to add new ones.
 
-# Requirements
+- [Requirements](#requirements)
+- [Missing types](#missing-types)
+- [Account Summary Example](#account-summary-example)
+- [Updating an Account](#updating-an-account)
+- [Updating a Subscription](#updating-a-subscription)
+- [Cancelling a subscription](#cancelling-a-subscription)
+- [Zoql Queries](#zoql-queries)
+  * [Getting Expired Subscriptions with Zoql](#getting-expired-subscriptions-with-zoql)
+
+## Requirements
 
 * Go >1.7
 * Zuora client ID (Use Environment variables as best practice)
 * Zuora client secret (Use Environment variables as best practice)
 * Zuora api url (Use Environment variables as best practice)
+* You can get a ClientId & ClientSecret at: https://labs.zuora.com/ for testing purposes
 
 ## Missing types
 
@@ -372,7 +382,11 @@ func newHTTPClient() *http.Client {
 }
 ```
 
-## Getting Expired Subscriptions with Zoql
+## Zoql Queries
+
+This package includes a helper struct to construct ZOQL queries. It **doesn't validate the query**, so make sure you're actually constructing the query you want. You can see the resulting query by calling `.Build()` on the Zoql compose struct.
+
+### Getting Expired Subscriptions with Zoql
 
 ```go
 package main
