@@ -5,13 +5,16 @@ A Go client library to consume [Zuora API](https://www.zuora.com/developer/api-r
 This is a __WIP__ and has minimal endpoints covered but it is really easy to add new ones.
 
 - [Requirements](#requirements)
+- [Available endpoints](#available-endpoints)
 - [Missing types](#missing-types)
 - [Account Summary Example](#account-summary-example)
 - [Updating an Account](#updating-an-account)
 - [Updating a Subscription](#updating-a-subscription)
 - [Cancelling a subscription](#cancelling-a-subscription)
-- [Zoql Queries](#zoql-queries)
+- [ZOQL Queries](#zoql-queries)
+  * [Getting Yearly Invoices](#getting-yearly-invoices)
   * [Getting Expired Subscriptions with Zoql](#getting-expired-subscriptions-with-zoql)
+  * [Getting Invoice Payments](#getting-invoice-payments)
 
 ## Requirements
 
@@ -20,6 +23,27 @@ This is a __WIP__ and has minimal endpoints covered but it is really easy to add
 * Zuora client secret (Use Environment variables as best practice)
 * Zuora api url (Use Environment variables as best practice)
 * You can get a ClientId & ClientSecret at: https://labs.zuora.com/ for testing purposes
+
+
+## Available endpoints
+
+* Accounts:
+	* Get (/v1/accounts/{accountKey})
+	* Summary (/v1/accounts/{objectId}/summary)
+	* Update (/v1/accounts/{accountKey})
+* Actions
+	* Query (/v1/action/query) ZOQL queries.
+* Catalog
+	* GetProduct (/v1/catalog/products?pageSize={pageSize})
+	* GetProductNextPage (Pass uri from GetProduct)
+* Describe
+	* Model (/v1/describe/{objectModel}) Helpful to see custom types and full properties.
+* PaymentMethods
+	* GetPaymentMethodSnapshot (/v1/object/payment-method-snapshot/{snapshotID})
+* Subscription
+	* ByKey (/v1/subscriptions/{subscriptionKey})
+	* Update (/v1/subscriptions/{subscriptionKey})
+	* Cancel (/v1/subscriptions/{subscriptionKey}/cancel)
 
 ## Missing types
 
@@ -382,11 +406,13 @@ func newHTTPClient() *http.Client {
 }
 ```
 
-## Zoql Queries
+## ZOQL Queries
 
-This package includes a helper struct to construct ZOQL queries. It **doesn't validate the query**, so make sure you're actually constructing the query you want. You can see the resulting query by calling `.Build()` on the Zoql compose struct.
+Some ZOQL queries that have been helpful in the past.
 
-### Getting Expired Subscriptions with Zoql
+### Getting Yearly Invoices
+
+Returns the 50 most recent Invoices from now until the previous year.
 
 ```go
 package main
@@ -424,12 +450,30 @@ func main() {
 	zuoraOAuthHeaderProvider := zuora.NewOAuthHeader(httpClient, &zuora.MemoryTokenStore{}, zuoraClientID, zuoraClientSecret, zuoraURL)
 	zuoraAPI := zuora.NewAPI(httpClient, zuoraOAuthHeaderProvider, zuoraURL)
 
-	zoql := zuora.NewZoqlComposer().
-		Fields("Name").From("Subscription").
-		Where("status", "cancelled").
-		And("termEndDate", time.Now().UTC().Format("2006-01-02"))
+	lastYear := time.Now().UTC().AddDate(-1, 0, 0).Format("2006-01-02")
 
-	t, err := zuoraAPI.V1.ActionsService.Query(ctx, zoql)
+	zoqlQuery := fmt.Sprintf(`
+	SELECT 
+		accountId, 
+		amount, 
+		amountWithoutTax, 
+		balance, 
+		createdDate, 
+		dueDate, 
+		id, 
+		invoiceDate, 
+		invoiceNumber, 
+		paymentAmount,
+		postedDate, 
+		refundAmount, 
+		status, 
+		targetDate, 
+		taxAmount, 
+		taxExemptAmount
+	FROM Invoice 
+	WHERE accountId='%s' and targetDate >= '%s'`, "A-S000XXXXX", lastYear)
+
+	t, err := zuoraAPI.V1.ActionsService.Query(ctx, zoqlQuery)
 
 	if err != nil {
 		log.Fatal(err)
@@ -440,7 +484,156 @@ func main() {
 
 func newHTTPClient() *http.Client {
 	keepAliveTimeout := 600 * time.Second
-	timeout := 3 * time.Second
+	timeout := 10 * time.Second
+	defaultTransport := &http.Transport{
+		Dial: (&net.Dialer{
+			KeepAlive: keepAliveTimeout,
+		}).Dial,
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 100,
+	}
+
+	return &http.Client{
+		Transport: defaultTransport,
+		Timeout:   timeout,
+	}
+}
+```
+
+### Getting Expired Subscriptions with Zoql
+
+Gets a list of Zuora subscriptions that are cancelled and whose TermEndDate is today.
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/hyeomans/zuora"
+	"github.com/joho/godotenv"
+)
+
+func main() {
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	ctx := context.Background()
+	zuoraClientID := os.Getenv("ZUORA_CLIENT_ID")
+	zuoraClientSecret := os.Getenv("ZUORA_CLIENT_SECRET")
+	zuoraURL := os.Getenv("ZUORA_URL")
+	httpClient := newHTTPClient()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	zuoraOAuthHeaderProvider := zuora.NewOAuthHeader(httpClient, &zuora.MemoryTokenStore{}, zuoraClientID, zuoraClientSecret, zuoraURL)
+	zuoraAPI := zuora.NewAPI(httpClient, zuoraOAuthHeaderProvider, zuoraURL)
+
+	today := time.Now().UTC().Format("2006-01-02")
+	zoqlQuery := fmt.Sprintf(`select name from subscription where status = 'cancelled' and termEndDate = '%v'`, today)
+
+	t, err := zuoraAPI.V1.ActionsService.Query(ctx, zoqlQuery)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(string(t))
+}
+
+func newHTTPClient() *http.Client {
+	keepAliveTimeout := 600 * time.Second
+	timeout := 10 * time.Second
+	defaultTransport := &http.Transport{
+		Dial: (&net.Dialer{
+			KeepAlive: keepAliveTimeout,
+		}).Dial,
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 100,
+	}
+
+	return &http.Client{
+		Transport: defaultTransport,
+		Timeout:   timeout,
+	}
+}
+```
+
+
+### Getting Invoice Payments
+
+Get all payments associated with provided invoice id.
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/hyeomans/zuora"
+	"github.com/joho/godotenv"
+)
+
+func main() {
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	ctx := context.Background()
+	zuoraClientID := os.Getenv("ZUORA_CLIENT_ID")
+	zuoraClientSecret := os.Getenv("ZUORA_CLIENT_SECRET")
+	zuoraURL := os.Getenv("ZUORA_URL")
+	httpClient := newHTTPClient()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	zuoraOAuthHeaderProvider := zuora.NewOAuthHeader(httpClient, &zuora.MemoryTokenStore{}, zuoraClientID, zuoraClientSecret, zuoraURL)
+	zuoraAPI := zuora.NewAPI(httpClient, zuoraOAuthHeaderProvider, zuoraURL)
+
+	invoiceID := "invoice-ID"
+	zoqlQuery := fmt.Sprintf(`
+	SELECT
+		amount,
+		createdDate,
+		id,
+		invoiceId,
+		paymentId
+	FROM invoicePayment
+	WHERE invoiceId='%s'`, invoiceID)
+
+	t, err := zuoraAPI.V1.ActionsService.Query(ctx, zoqlQuery)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(string(t))
+}
+
+func newHTTPClient() *http.Client {
+	keepAliveTimeout := 600 * time.Second
+	timeout := 10 * time.Second
 	defaultTransport := &http.Transport{
 		Dial: (&net.Dialer{
 			KeepAlive: keepAliveTimeout,

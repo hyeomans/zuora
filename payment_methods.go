@@ -22,16 +22,18 @@ func newPaymentMethods(http Doer, authHeaderProvider AuthHeaderProvider, baseURL
 	}
 }
 
-// Get CRUD Get
-// More info at: https://www.zuora.com/developer/api-reference/#operation/Object_GETPaymentMethod
-func (t *paymentMethods) Get(ctx context.Context, objectID string) ([]byte, error) {
+// GetPaymentMethodSnapshot A Payment Method Snapshot is a copy of the particular Payment Method used in a
+// transaction. If the Payment Method is deleted, the Payment Method Snapshot continues to retain the
+// data used in each of the past transactions.
+// More info at: https://www.zuora.com/developer/api-reference/#operation/Object_GETPaymentMethodSnapshot
+func (t *paymentMethods) GetPaymentMethodSnapshot(ctx context.Context, snapshotID string) ([]byte, error) {
 	authHeader, err := t.authHeaderProvider.AuthHeaders(ctx)
 
 	if err != nil {
 		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to set auth headers: %v", err)}
 	}
 
-	url := fmt.Sprintf("%v/v1/accounts/%v", t.baseURL, objectID)
+	url := fmt.Sprintf("%v/v1/object/payment-method-snapshot/%v", t.baseURL, snapshotID)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 
@@ -58,7 +60,7 @@ func (t *paymentMethods) Get(ctx context.Context, objectID string) ([]byte, erro
 
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
-	fmt.Println("DECODIDIID", string(body))
+
 	if err != nil {
 		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to read body response into memory: %v", err)}
 	}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 type actionsService struct {
@@ -42,7 +43,7 @@ func newActionsService(http Doer, authHeaderProvider AuthHeaderProvider, baseURL
 // * The Invoice Settlement feature is not supported. This feature includes Unapplied Payments, Credit and Debit Memo, and Invoice Item Settlement. The Orders feature is also not supported.
 //
 // *The default WSDL version for Actions is 79.
-func (t *actionsService) Query(ctx context.Context, querier Querier) ([]byte, error) {
+func (t *actionsService) Query(ctx context.Context, zoqlQuery string) ([]byte, error) {
 	authHeader, err := t.authHeaderProvider.AuthHeaders(ctx)
 
 	if err != nil {
@@ -50,9 +51,12 @@ func (t *actionsService) Query(ctx context.Context, querier Querier) ([]byte, er
 	}
 
 	url := fmt.Sprintf("%v/v1/action/query", t.baseURL)
-	query := querier.Build()
-
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBufferString(query))
+	var buffer bytes.Buffer
+	buffer.WriteString(`{ "queryString" : "`)
+	buffer.WriteString(strings.TrimSpace(zoqlQuery))
+	buffer.WriteString(`"}`)
+	fmt.Println(buffer.String())
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBufferString(buffer.String()))
 
 	if err != nil {
 		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to create an HTTP request: %v", err)}
