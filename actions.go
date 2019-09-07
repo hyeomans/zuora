@@ -13,13 +13,15 @@ type actionsService struct {
 	http               Doer
 	authHeaderProvider AuthHeaderProvider
 	baseURL            string
+	isPce              bool
 }
 
-func newActionsService(http Doer, authHeaderProvider AuthHeaderProvider, baseURL string) *actionsService {
+func newActionsService(http Doer, authHeaderProvider AuthHeaderProvider, baseURL string, isPce bool) *actionsService {
 	return &actionsService{
 		http:               http,
 		authHeaderProvider: authHeaderProvider,
 		baseURL:            baseURL,
+		isPce:              isPce,
 	}
 }
 
@@ -50,7 +52,14 @@ func (t *actionsService) Query(ctx context.Context, zoqlQuery string) ([]byte, e
 		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to set auth headers: %v", err)}
 	}
 
-	url := fmt.Sprintf("%v/v1/action/query", t.baseURL)
+	var url string
+
+	if t.isPce {
+		url = fmt.Sprintf("%v:19016/v1/action/query", t.baseURL)
+	} else {
+		url = fmt.Sprintf("%v/v1/action/query", t.baseURL)
+	}
+
 	var buffer bytes.Buffer
 	buffer.WriteString(`{ "queryString" : "`)
 	buffer.WriteString(strings.TrimSpace(zoqlQuery))
@@ -82,10 +91,6 @@ func (t *actionsService) Query(ctx context.Context, zoqlQuery string) ([]byte, e
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 
-	if err != nil {
-		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to read body response into memory: %v", err)}
-	}
-
 	if res.StatusCode < 200 || res.StatusCode > 299 {
 		var isTemporary bool
 		if http.StatusRequestTimeout == res.StatusCode ||
@@ -95,7 +100,11 @@ func (t *actionsService) Query(ctx context.Context, zoqlQuery string) ([]byte, e
 			isTemporary = true
 		}
 
-		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error while trying to read body response into memory: %v", err)}
+		if err != nil {
+			return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error while trying to read body response into memory. Response Code: %v - Error: %v", res.StatusCode, err)}
+		}
+
+		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("got an invalid http status. Response Code: %v - Body: %v", res.StatusCode, string(body))}
 	}
 
 	return body, nil
