@@ -195,7 +195,7 @@ type Contact struct {
 // or print them and send them to customers through postal
 // mail. You can also generate a preview of an invoice
 // before you activate a new subscription or amendment.
-//The Invoice object provides information about customers'
+// The Invoice object provides information about customers'
 // accounts for invoices, including dates, the status, and
 // amounts. It is created at the account level, and can include
 // all of the charges for multiple subscriptions for an account.

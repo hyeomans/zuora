@@ -7,14 +7,17 @@ This is a __WIP__ and has minimal endpoints covered but it is really easy to add
 - [Requirements](#requirements)
 - [Available endpoints](#available-endpoints)
 - [Missing types](#missing-types)
-- [Account Summary Example](#account-summary-example)
-- [Updating an Account](#updating-an-account)
-- [Updating a Subscription](#updating-a-subscription)
-- [Cancelling a subscription](#cancelling-a-subscription)
+- [Usage](#usage)
+	* [Account Summary Example](#account-summary-example)
+	* [Updating an Account](#updating-an-account)
+	* [Updating a Subscription](#updating-a-subscription)
+	* [Cancelling a subscription](#cancelling-a-subscription)
 - [ZOQL Queries](#zoql-queries)
   * [Getting Yearly Invoices](#getting-yearly-invoices)
   * [Getting Expired Subscriptions with Zoql](#getting-expired-subscriptions-with-zoql)
   * [Getting Invoice Payments](#getting-invoice-payments)
+- [Production Copy Environment](#production-copy-environment)
+- [Error handling](#error-handling)
 
 ## Requirements
 
@@ -28,22 +31,26 @@ This is a __WIP__ and has minimal endpoints covered but it is really easy to add
 ## Available endpoints
 
 * Accounts:
-	* Get (/v1/accounts/{accountKey})
-	* Summary (/v1/accounts/{objectId}/summary)
-	* Update (/v1/accounts/{accountKey})
+	* Get - `/v1/accounts/{accountKey}`
+	* Summary - `/v1/accounts/{objectId}/summary`
+	* Update - `/v1/accounts/{accountKey}`
 * Actions
-	* Query (/v1/action/query) ZOQL queries.
+	* Query - `/v1/action/query` ZOQL queries
 * Catalog
-	* GetProduct (/v1/catalog/products?pageSize={pageSize})
-	* GetProductNextPage (Pass uri from GetProduct)
+	* GetProduct - `/v1/catalog/products?pageSize={pageSize}`
+	* GetProductNextPage - Pass uri from GetProduct
 * Describe
-	* Model (/v1/describe/{objectModel}) Helpful to see custom types and full properties.
+	* Model - `/v1/describe/{objectModel}` Helpful to see custom types and full properties
 * PaymentMethods
-	* GetPaymentMethodSnapshot (/v1/object/payment-method-snapshot/{snapshotID})
+	* GetPaymentMethod - `/v1/object/payment-method/{objectID}`
+	* GetPaymentMethodSnapshot - `/v1/object/payment-method-snapshot/{snapshotID}`
 * Subscription
-	* ByKey (/v1/subscriptions/{subscriptionKey})
-	* Update (/v1/subscriptions/{subscriptionKey})
-	* Cancel (/v1/subscriptions/{subscriptionKey}/cancel)
+	* ByKey - `/v1/subscriptions/{subscriptionKey}`
+	* Update - `/v1/subscriptions/{subscriptionKey}`
+	* Cancel - `/v1/subscriptions/{subscriptionKey}/cancel`
+* Invoices
+	* GetInvoice - `/v1/object/invoice/{invoiceID}`
+	* GetInvoiceFiles - `/v1/invoices/{InvoiceID}/files?pageSize={pageSize}`
 
 ## Missing types
 
@@ -52,7 +59,7 @@ Zuora responses vary from company to company. The variation comes from Custom Fi
 
 The package could send typed information, let's take the example of `Product`. Zuora defines "Product" entity like this:
 
-```
+```go
 type Product struct {
   AllowFeatureChanges *bool   `json:"AllowFeatureChanges,omitempty"`
   Category            *string `json:"Category,omitempty"`
@@ -71,14 +78,14 @@ type Product struct {
 
 But, how would you define custom fields if the signature of the method is:
 
-```
+```go
 func (t *catalogService) GetProduct(ctx context.Context, pageSize int) (*Product, error) {....}
 ```
 
 Well, you can't. That's why we return the raw bytes, and then you can marshal into your own struct. We include common types into the package, so you don't have to guess. 
 Imagine you have a custom field named "DisplayName__c", you can define your own struct using the power of struct embedding. For example:
 
-```
+```go
 type myProduct struct {
   zuora.Product
   DisplayName     *string `json:"DisplayName__c,omitempty"`
@@ -87,7 +94,9 @@ type myProduct struct {
 
 Now marshal the JSON into your custom struct. Let's see a practical example with the Account Summary endpoint.
 
-## Account Summary Example
+## Usage
+
+### Account Summary Example
 
 Account summary response retrieves a great overview of an account state. The problem is that if you defined custom properties, the nested payload would include those properties.
 
@@ -206,7 +215,7 @@ func newHTTPClient() *http.Client {
 You can apply this pattern to other endpoints, for example, "Subscriptions," "Products," or ZOQL calls to the Query endpoint.
 
 
-## Updating an Account
+### Updating an Account
 Updating an account through Zuora requires to send a custom JSON payload. According to documentation, it is only necessary to submit those properties that need to be changed.
 
 This package also allows modifying custom properties. Here is an example:
@@ -272,7 +281,7 @@ func main() {
 }
 ```
 
-## Updating a Subscription
+### Updating a Subscription
 
 ```go
 package main
@@ -340,7 +349,7 @@ func newHTTPClient() *http.Client {
 
 ```
 
-## Cancelling a subscription
+### Cancelling a subscription
 
 ```go
 package main
@@ -648,3 +657,74 @@ func newHTTPClient() *http.Client {
 	}
 }
 ```
+
+## Production Copy Environment
+
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/hyeomans/zuora"
+	"github.com/joho/godotenv"
+)
+
+func main() {
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	ctx := context.Background()
+	zuoraClientID := os.Getenv("ZUORA_CLIENT_ID")
+	zuoraClientSecret := os.Getenv("ZUORA_CLIENT_SECRET")
+	zuoraURL := os.Getenv("ZUORA_URL")
+	httpClient := newHTTPClient()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//zuoraClientID it's going to be the email
+	//zuoraClientSecret it's going to be the plain password
+	zuoraBasicAuth := zuora.NewBasicAuthHeader(zuoraClientID, zuoraClientSecret)
+	zuoraAPI := zuora.NewPCEAPI(httpClient, zuoraBasicAuth, zuoraURL) //<---- Call NewPCEAPI instead of NewAPI.
+
+	zoqlQuery := fmt.Sprintf(`select name, accountid from subscription`)
+	r, err := zuoraAPI.V1.ActionsService.Query(ctx, zoqlQuery)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(string(r))
+}
+
+func newHTTPClient() *http.Client {
+	keepAliveTimeout := 600 * time.Second
+	timeout := 10 * time.Second
+	defaultTransport := &http.Transport{
+		Dial: (&net.Dialer{
+			KeepAlive: keepAliveTimeout,
+		}).Dial,
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 100,
+	}
+
+	return &http.Client{
+		Transport: defaultTransport,
+		Timeout:   timeout,
+	}
+}
+```
+
+## Error handling

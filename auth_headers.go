@@ -44,7 +44,7 @@ type BasicAuthHeader struct {
 
 // NewBasicAuthHeader initialize with clientID & clientSecret from Zuora.
 func NewBasicAuthHeader(clientID, clientSecret string) *BasicAuthHeader {
-	return &BasicAuthHeader{clientID: clientID, clientSecret: clientID}
+	return &BasicAuthHeader{clientID: clientID, clientSecret: clientSecret}
 }
 
 // AuthHeaders returns a string that will be added to each request going out

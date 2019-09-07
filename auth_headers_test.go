@@ -10,7 +10,7 @@ import (
 func TestAuthHeaders(t *testing.T) {
 	ctx := context.Background()
 	authHeaders := NewBasicAuthHeader("testClientID", "testClientSecret")
-	want := "Basic dGVzdENsaWVudElEOnRlc3RDbGllbnRJRA=="
+	want := "Basic dGVzdENsaWVudElEOnRlc3RDbGllbnRTZWNyZXQ="
 	got, err := authHeaders.AuthHeaders(ctx)
 	if err != nil {
 		t.Errorf("AuthHeaders() return an error: %v", err)
