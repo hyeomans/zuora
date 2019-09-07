@@ -65,10 +65,6 @@ func (t *catalogService) GetProduct(ctx context.Context, pageSize int) ([]byte, 
 
 	body, err := ioutil.ReadAll(res.Body)
 
-	if err != nil {
-		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to read body response into memory: %v", err)}
-	}
-
 	if res.StatusCode < 200 || res.StatusCode > 299 {
 		var isTemporary bool
 		if http.StatusRequestTimeout == res.StatusCode ||
@@ -78,7 +74,11 @@ func (t *catalogService) GetProduct(ctx context.Context, pageSize int) ([]byte, 
 			isTemporary = true
 		}
 
-		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error on HTTP request. Response code: %v - Error message %v", res.StatusCode, string(body))}
+		if err != nil {
+			return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error while trying to read body response into memory. Response Code: %v - Error: %v", res.StatusCode, err)}
+		}
+
+		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("got an invalid http status. Response Code: %v - Body: %v", res.StatusCode, string(body))}
 	}
 
 	jsonResponse := Response{}
@@ -139,10 +139,6 @@ func (t *catalogService) GetProductNextPage(ctx context.Context, nextPageURI str
 
 	body, err := ioutil.ReadAll(res.Body)
 
-	if err != nil {
-		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to read body response into memory: %v", err)}
-	}
-
 	if res.StatusCode < 200 || res.StatusCode > 299 {
 		var isTemporary bool
 		if http.StatusRequestTimeout == res.StatusCode ||
@@ -152,7 +148,11 @@ func (t *catalogService) GetProductNextPage(ctx context.Context, nextPageURI str
 			isTemporary = true
 		}
 
-		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error on HTTP request. Response code: %v - Error message %v", res.StatusCode, string(body))}
+		if err != nil {
+			return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error while trying to read body response into memory. Response Code: %v - Error: %v", res.StatusCode, err)}
+		}
+
+		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("got an invalid http status. Response Code: %v - Body: %v", res.StatusCode, string(body))}
 	}
 
 	jsonResponse := Response{}
