@@ -62,10 +62,6 @@ func (t *subscriptionsService) ByKey(ctx context.Context, subscriptionKey string
 
 	body, err := ioutil.ReadAll(res.Body)
 
-	if err != nil {
-		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to read body response into memory: %v", err)}
-	}
-
 	if res.StatusCode < 200 || res.StatusCode > 299 {
 		var isTemporary bool
 		if http.StatusRequestTimeout == res.StatusCode ||
@@ -75,7 +71,11 @@ func (t *subscriptionsService) ByKey(ctx context.Context, subscriptionKey string
 			isTemporary = true
 		}
 
-		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error on HTTP request. Response code: %v - Error message %v", res.StatusCode, string(body))}
+		if err != nil {
+			return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error while trying to read body response into memory. Response Code: %v - Error: %v", res.StatusCode, err)}
+		}
+
+		return nil, responseError{isTemporary: isTemporary, message: fmt.Sprintf("got an invalid http status. Response Code: %v - Body: %v", res.StatusCode, string(body))}
 	}
 
 	jsonResponse := Response{}
@@ -150,10 +150,6 @@ func (t *subscriptionsService) Update(ctx context.Context, subscriptionKey strin
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 
-	if err != nil {
-		return Response{}, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to read body response into memory: %v", err)}
-	}
-
 	if res.StatusCode < 200 || res.StatusCode > 299 {
 		var isTemporary bool
 		if http.StatusRequestTimeout == res.StatusCode ||
@@ -163,7 +159,11 @@ func (t *subscriptionsService) Update(ctx context.Context, subscriptionKey strin
 			isTemporary = true
 		}
 
-		return Response{}, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error on HTTP request. Response code: %v - Error message %v", res.StatusCode, string(body))}
+		if err != nil {
+			return Response{}, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error while trying to read body response into memory. Response Code: %v - Error: %v", res.StatusCode, err)}
+		}
+
+		return Response{}, responseError{isTemporary: isTemporary, message: fmt.Sprintf("got an invalid http status. Response Code: %v - Body: %v", res.StatusCode, string(body))}
 	}
 
 	jsonResponse := Response{}
@@ -228,10 +228,6 @@ func (t *subscriptionsService) Cancel(ctx context.Context, subscriptionKey strin
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 
-	if err != nil {
-		return SubscriptionCancellationResponse{}, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to read body response into memory: %v", err)}
-	}
-
 	if res.StatusCode < 200 || res.StatusCode > 299 {
 		var isTemporary bool
 		if http.StatusRequestTimeout == res.StatusCode ||
@@ -241,7 +237,11 @@ func (t *subscriptionsService) Cancel(ctx context.Context, subscriptionKey strin
 			isTemporary = true
 		}
 
-		return SubscriptionCancellationResponse{}, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error on HTTP request. Response code: %v - Error message %v", res.StatusCode, string(body))}
+		if err != nil {
+			return SubscriptionCancellationResponse{}, responseError{isTemporary: isTemporary, message: fmt.Sprintf("error while trying to read body response into memory. Response Code: %v - Error: %v", res.StatusCode, err)}
+		}
+
+		return SubscriptionCancellationResponse{}, responseError{isTemporary: isTemporary, message: fmt.Sprintf("got an invalid http status. Response Code: %v - Body: %v", res.StatusCode, string(body))}
 	}
 
 	jsonResponse := SubscriptionCancellationResponse{}
