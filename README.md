@@ -36,6 +36,7 @@ This is a __WIP__ and has minimal endpoints covered but it is really easy to add
 	* Update - `/v1/accounts/{accountKey}`
 * Actions
 	* Query - `/v1/action/query` ZOQL queries
+	* Create - `/v1/action/create` Bulk action endpoint.
 * Catalog
 	* GetProduct - `/v1/catalog/products?pageSize={pageSize}`
 	* GetProductNextPage - Pass uri from GetProduct
@@ -51,6 +52,9 @@ This is a __WIP__ and has minimal endpoints covered but it is really easy to add
 * Invoices
 	* GetInvoice - `/v1/object/invoice/{invoiceID}`
 	* GetInvoiceFiles - `/v1/invoices/{InvoiceID}/files?pageSize={pageSize}`
+	* GetInvoiceItems - `/v1/invoices/%v/items?pageSize={pageSize}`
+* Refund
+	* Create - `/v1/object/refund`
 
 ## Missing types
 
