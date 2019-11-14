@@ -9,6 +9,7 @@ type V1 struct {
 	DescribeService      *describeService
 	PaymentMethods       *paymentMethods
 	Invoices             *invoices
+	RefundService        *refundService
 }
 
 //API is a container struct with access to all underlying services
@@ -28,6 +29,7 @@ func NewAPI(httpClient Doer, authHeaderProvider AuthHeaderProvider, baseURL stri
 			ActionsService:       newActionsService(httpClient, authHeaderProvider, baseURL, false),
 			PaymentMethods:       newPaymentMethods(httpClient, authHeaderProvider, baseURL, false),
 			Invoices:             newInvoices(httpClient, authHeaderProvider, baseURL, false),
+			RefundService:        newRefundService(httpClient, authHeaderProvider, baseURL, false),
 		},
 		ObjectModel: newObjectModel(),
 	}
@@ -44,6 +46,7 @@ func NewPCEAPI(httpClient Doer, authHeaderProvider AuthHeaderProvider, baseURL s
 			ActionsService:       newActionsService(httpClient, authHeaderProvider, baseURL, true),
 			PaymentMethods:       newPaymentMethods(httpClient, authHeaderProvider, baseURL, true),
 			Invoices:             newInvoices(httpClient, authHeaderProvider, baseURL, true),
+			RefundService:        newRefundService(httpClient, authHeaderProvider, baseURL, true),
 		},
 		ObjectModel: newObjectModel(),
 	}
