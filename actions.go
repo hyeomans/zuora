@@ -65,7 +65,7 @@ func (t *actionsService) Query(ctx context.Context, zoqlQuery string) ([]byte, e
 	buffer.WriteString(`{ "queryString" : "`)
 	buffer.WriteString(strings.TrimSpace(zoqlQuery))
 	buffer.WriteString(`"}`)
-	fmt.Println(buffer.String())
+
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBufferString(buffer.String()))
 
 	if err != nil {
