@@ -54,6 +54,48 @@ type InvoiceItem struct {
 	TaxationItems     TaxationItem `json:"taxationItems"`
 }
 
+//InvoiceItemZoql this includes all the fields that can be retrieved when
+// calling InvoiceItem through ZOQL query.
+type InvoiceItemZoql struct {
+	AccountingCode         string  `json:"AccountingCode,omitempty"`
+	AppliedToChargeNumber  string  `json:"AppliedToChargeNumber,omitempty"`
+	AppliedToInvoiceItemID string  `json:"AppliedToInvoiceItemId,omitempty"`
+	Balance                float64 `json:"Balance,omitempty"`
+	ChargeAmount           float64 `json:"ChargeAmount,omitempty"`
+	ChargeDate             string  `json:"ChargeDate,omitempty"`
+	ChargeDescription      string  `json:"ChargeDescription,omitempty"`
+	ChargeID               string  `json:"ChargeId,omitempty"`
+	ChargeName             string  `json:"ChargeName,omitempty"`
+	ChargeNumber           string  `json:"ChargeNumber,omitempty"`
+	ChargeType             string  `json:"ChargeType,omitempty"`
+	CreatedByID            string  `json:"CreatedById,omitempty"`
+	CreatedDate            string  `json:"CreatedDate,omitempty"`
+	ID                     string  `json:"Id,omitempty"`
+	InvoiceID              string  `json:"InvoiceId,omitempty"`
+	ProcessingType         string  `json:"ProcessingType,omitempty"`
+	ProductDescription     string  `json:"ProductDescription,omitempty"`
+	ProductID              string  `json:"ProductId,omitempty"`
+	ProductName            string  `json:"ProductName,omitempty"`
+	Quantity               float64 `json:"Quantity,omitempty"`
+	RatePlanChargeID       string  `json:"RatePlanChargeId,omitempty"`
+	RevRecCode             string  `json:"RevRecCode,omitempty"`
+	RevRecStartDate        string  `json:"RevRecStartDate,omitempty"`
+	RevRecTriggerCondition string  `json:"RevRecTriggerCondition,omitempty"`
+	ServiceEndDate         string  `json:"ServiceEndDate,omitempty"`
+	ServiceStartDate       string  `json:"ServiceStartDate,omitempty"`
+	SKU                    string  `json:"SKU,omitempty"`
+	SubscriptionID         string  `json:"SubscriptionId,omitempty"`
+	SubscriptionNumber     string  `json:"SubscriptionNumber,omitempty"`
+	TaxAmount              float64 `json:"TaxAmount,omitempty"`
+	TaxCode                string  `json:"TaxCode,omitempty"`
+	TaxExemptAmount        float64 `json:"TaxExemptAmount,omitempty"`
+	TaxMode                string  `json:"TaxMode,omitempty"`
+	UnitPrice              float64 `json:"UnitPrice,omitempty"`
+	UOM                    string  `json:"UOM,omitempty"`
+	UpdatedByID            string  `json:"UpdatedById,omitempty"`
+	UpdatedDate            string  `json:"UpdatedDate,omitempty"`
+}
+
 // InvoiceItemsResponse --
 type InvoiceItemsResponse struct {
 	InvoiceItems []InvoiceItem `json:"invoiceItems"`

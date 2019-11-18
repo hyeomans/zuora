@@ -1,17 +1,5 @@
 package zuora
 
-//GatewayOption --
-type GatewayOption struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
-//RefundInvoicePayment --
-type RefundInvoicePayment struct {
-	InvoiceID    string `json:"InvoiceId"`
-	RefundAmount string `json:"RefundAmount"`
-}
-
 //RefundType --
 type RefundType string
 
@@ -35,59 +23,140 @@ var RefundReasonCodePaymentReversal RefundReasonCode = "Payment Reversal"
 
 //RefundCreatePayload --
 type RefundCreatePayload struct {
-	// AccountID The ID of the account associated with this refund.
-	// This field is only required if you create a non-referenced refund.
-	// Don't specify a value for any other type of refund; Zuora associates the refund automatically with the account from the associated payment. Character limit: 32 Values: a valid account ID
+	// Required.
+	Amount float64 `json:"Amount"`
+
+	// Required. Specifies if the refund is electronic or external.
+	Type RefundType `json:"Type"`
+
 	AccountID string `json:"AccountId,omitempty"`
-	// Amount - REQUIRED
-	// The amount of the refund.
-	// The amount can't exceed the amount of the associated payment.
-	// If the original payment was applied to a single invoice, then you can create a partial refund.
-	// However, if the payment was applies to multiple invoices, then you can only make a partial
-	// refund through the web-based UI, not through the API.
-	// Character limit: 16 Values: a valid currency amount
-	Amount  float64 `json:"Amount"`
-	Comment string  `json:"Comment,omitempty"`
-	// GatewayOptionData A field used to pass gateway options.
-	// Zuora allows you to pass in special gateway-specific parameters for payments that go through the
-	// Adyen, Autorize.et, CyberSource, Merchant eSolutions, Orbital (Chase Paymentech), QValent, Vantiv, and Verifi gateways.
-	// For each of these special parameters, you supply the name-value pair and Zuora passes it to the gateway.
-	// This allows you to add functionality that's supported by a specific gateway but currently not supported by Zuora.
-	GatewayOptionData *struct {
-		GatewayOption []GatewayOption `json:"GatewayOption,omitempty"`
-	} `json:"GatewayOptionData,omitempty"`
-	// MethodType Indicates how an external refund was issued to a customer. This field is only required if the Type field is set to External.
+
+	Comment string `json:"Comment,omitempty"`
+	// Indicates how an external refund was issued to a customer. This field is only required if the Type field is set to External.
 	MethodType string `json:"MethodType,omitempty"`
-	// PaymentID The unique ID of the payment method that the customer used to make the payment.
-	// This field is only required if you create a non-referenced refund. Character limit: 32 V**alues**: a valid payment method ID
-	PaymentID string `json:"PaymentId"`
-	// ReasonCode A code identifying the reason for the transaction. Must be an existing reason code or empty. If you do not specify a value, Zuora uses the default reason code. Character limit: 32 V**alues**: a valid reason code
+
+	// The unique ID of the payment method that the customer used to make the payment.
+	// This field is only required if you create a non-referenced refund.
+	PaymentID string `json:"PaymentId,omitempty"`
+
+	// The unique ID of the payment method that the customer used to make the payment.
+	// Specify a value for this field only if you're creating an electronic non-referenced refund.
+	PaymentMethodID string `json:"PaymentMethodID,omitempty"`
+
+	// ReasonCode A code identifying the reason for the transaction. Must be an existing reason code or empty.
+	// If you do not specify a value, Zuora uses the default reason code.
 	ReasonCode RefundReasonCode `json:"ReasonCode,omitempty"`
-	// RefundDate The date of the refund, in yyyy-mm-dd format.
+
+	// The date of the refund, in yyyy-mm-dd format.
 	// The date of the refund cannot be before the payment date.
 	// This field is only required if the Type field is set to External.
-	// Zuora automatically generates this field for electronic refunds. Character limit: 29
+	// Zuora automatically generates this field for electronic refunds.
 	RefundDate string `json:"RefundDate,omitempty"`
 
-	// RefundInvoicePaymentData Container for the refund invoice payment data. This field is only required if you apply a full or partical refund against a payment attached to muliple invoices.
-	RefundInvoicePaymentData *struct {
-		RefundInvoicePayment []RefundInvoicePayment `json:"RefundInvoicePayment,omitempty"`
-	} `json:"RefundInvoicePaymentData,omitempty"`
+	// Use this field to pass gateway options.
+	GatewayOptionData *GatewayOptionData `json:"GatewayOptionData,omitempty"`
 
-	// SoftDescriptor A payment gateway-specific field that maps Zuora to other gateways .
+	// RefundInvoicePaymentData Container for the refund invoice payment data.
+	// This field is only required if you apply a full or partical refund against a payment attached to muliple invoices.
+	RefundInvoicePaymentData *RefundInvoicePaymentData `json:"RefundInvoicePaymentData,omitempty"`
+
+	// A payment gateway-specific field that maps Zuora to other gateways .
 	SoftDescriptor string `json:"SoftDescriptor,omitempty"`
-	// SoftDescriptorPhone A payment gateway-specific field that maps Zuora to other gateways .
+
+	// A payment gateway-specific field that maps Zuora to other gateways .
 	SoftDescriptorPhone string `json:"SoftDescriptorPhone,omitempty"`
-	// SourceType Specifies whether the refund is a refund payment or a credit balance.
+
+	// Specifies whether the refund is a refund payment or a credit balance.
 	// This field is only required if you create a non-referenced refund.
 	// If you creating an non-referenced refund, then set this value to CreditBalance
 	SourceType string `json:"SourceType,omitempty"`
-	// Type Specifies if the refund is electronic or external.
-	Type RefundType `json:"Type"`
+}
+
+// RefundInvoicePaymentData --
+type RefundInvoicePaymentData struct {
+	RefundInvoicePayment []RefundInvoicePayment `json:"RefundInvoicePayment,omitempty"`
+}
+
+// GatewayOptionData --
+type GatewayOptionData struct {
+	GatewayOption []GatewayOption `json:"GatewayOption,omitempty"`
+}
+
+//GatewayOption --
+type GatewayOption struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+//RefundInvoicePayment --
+type RefundInvoicePayment struct {
+	CreatedByID      string  `json:"CreatedById,omitempty"`
+	CreatedDate      string  `json:"CreatedDate,omitempty"`
+	ID               string  `json:"Id,omitempty"`
+	InvoiceID        string  `json:"InvoiceId,omitempty"`
+	InvoicePaymentID string  `json:"InvoicePaymentId"`
+	RefundAmount     float64 `json:"RefundAmount"`
+	RefundID         string  `json:"RefundId"`
+	UpdatedByID      string  `json:"UpdatedById,omitempty"`
+	UpdatedDate      string  `json:"UpdatedDate,omitempty"`
+}
+
+// Refund A refund returns money to a customer - as opposed to a credit, which creates a customer credit balance
+// that may be applied to reduce the amount owed to you. For instance,
+// refunds are used when a customer cancels service and is no longer your customer.
+// Refunds can also represent processed payments that are reversed, such as a chargeback or a direct debit payment reversal.
+type Refund struct {
+	AccountID               string  `json:"AccountId,omitempty"`
+	AccountingCode          string  `json:"AccountingCode,omitempty"`
+	Amount                  float64 `json:"Amount,omitempty"`
+	CancelledOn             string  `json:"CancelledOn,omitempty"`
+	Comment                 string  `json:"Comment,omitempty"`
+	CreatedByID             string  `json:"CreatedById,omitempty"`
+	CreatedDate             string  `json:"CreatedDate,omitempty"`
+	Gateway                 string  `json:"Gateway,omitempty"`
+	GatewayResponse         string  `json:"GatewayResponse,omitempty"`
+	GatewayResponseCode     string  `json:"GatewayResponseCode,omitempty"`
+	GatewayState            string  `json:"GatewayState"`
+	ID                      string  `json:"Id,omitempty"`
+	MarkedForSubmissionOn   string  `json:"MarkedForSubmissionOn,omitempty"`
+	MethodType              string  `json:"MethodType,omitempty"`
+	PaymentID               string  `json:"PaymentId,omitempty"`
+	PaymentMethodID         string  `json:"PaymentMethodId,omitempty"`
+	PaymentMethodSnapshotID string  `json:"PaymentMethodSnapshotId,omitempty"`
+	ReasonCode              string  `json:"ReasonCode,omitempty"`
+	ReferenceID             string  `json:"ReferenceID,omitempty"`
+	RefundDate              string  `json:"RefundDate,omitempty"`
+	RefundNumber            string  `json:"RefundNumber,omitempty"`
+	RefundTransactionTime   string  `json:"RefundTransactionTime,omitempty"`
+	SecondRefundReferenceID string  `json:"SecondRefundReferenceId,omitempty"`
+	SettledOn               string  `json:"SettledOn,omitempty"`
+	SoftDescriptor          string  `json:"SoftDescriptor,omitempty"`
+	SoftDescriptorPhone     string  `json:"SoftDescriptorPhone,omitempty"`
+	SourceType              string  `json:"SourceType,omitempty"`
+	Status                  string  `json:"Status,omitempty"`
+	SubmittedOn             string  `json:"SubmittedOn,omitempty"`
+	TransferredToAccounting string  `json:"TransferredToAccounting,omitempty"`
+	Type                    string  `json:"Type"`
+	UpdatedByID             string  `json:"UpdatedById,omitempty"`
+	UpdatedDate             string  `json:"UpdatedDate,omitempty"`
 }
 
 //RefundCreateResonse --
 type RefundCreateResonse struct {
 	Response
 	ID string `json:"Id"`
+}
+
+// InvoicePayment intermediary table between Refunds & Refunds.
+// You can use PaymentID from Refund to search all Invoices using a ZOQL query.
+type InvoicePayment struct {
+	Amount       float64 `json:"Amount"`
+	CreatedByID  string  `json:"CreatedById,omitempty"`
+	CreatedDate  string  `json:"CreatedDate,omitempty"`
+	ID           string  `json:"Id,omitempty"`
+	InvoiceID    string  `json:"InvoiceId"`
+	PaymentID    string  `json:"PaymentId,omitempty"`
+	RefundAmount float64 `json:"RefundAmount,omitempty"`
+	UpdatedByID  string  `json:"UpdatedById,omitempty"`
+	UpdatedDate  string  `json:"UpdatedDate,omitempty"`
 }
