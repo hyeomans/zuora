@@ -18,6 +18,9 @@ var AdjustmentTypeCredit AdjustmentType = "Credit"
 // AdjustmentTypeDebit --
 var AdjustmentTypeDebit AdjustmentType = "Debit"
 
+// AdjustmentTypeCharge --
+var AdjustmentTypeCharge AdjustmentType = "Charge"
+
 //InvoiceItemAdjustmentCreatePayload use it when calling Actions.Create endpoint.
 type InvoiceItemAdjustmentCreatePayload struct {
 	// The accounting code for the invoice item. Accounting codes group transactions that contain similar accounting attributes.
