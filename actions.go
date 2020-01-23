@@ -111,14 +111,38 @@ func (t *actionsService) Query(ctx context.Context, zoqlQuery string) ([]byte, e
 	return body, nil
 }
 
-func (t *actionsService) Create(ctx context.Context, actionPayload interface{}) ([]byte, error) {
+// Query The create call can be used to create zObjects in bulk.
+// API Reference: https://www.zuora.com/developer/api-reference/#operation/Action_POSTcreate
+//
+// The useSingleTransaction param controls how the objects are created. If set to false (the default API behavior),
+// each object is created in its own unit of work. In addition, the response will indicate which objects were created and which ones where not.
+// If the parameter is set to true, then all of the objects will be created in the same unit of work. This means that either all of the objects will be created, or none of them will.
+//
+// An example of when useSingleTransaction is required is when creating InvoiceItemAdjustment objects where one is a Credit and one is a Charge
+//
+// Limitations
+// This call has the following limitations:
+//
+// * All zObjects must be the same type
+//
+// * Only 50 zObjects can be created at a time
+//
+// * ZObjects can not be null
+//
+// * The default WSDL version for Actions is 79.
+//
+// * The Invoice Settlement feature is not supported. This feature includes Unapplied Payments, Credit and Debit Memo, and Invoice Item Settlement. The Orders feature is also not supported.
+func (t *actionsService) Create(ctx context.Context, actionPayload interface{}, useSingleTransaction bool) ([]byte, error) {
 	authHeader, err := t.authHeaderProvider.AuthHeaders(ctx)
 
 	if err != nil {
 		return nil, responseError{isTemporary: false, message: fmt.Sprintf("error while trying to set auth headers: %v", err)}
 	}
 
-	url := fmt.Sprintf("%v/v1/action/create", t.baseURL)
+	url := fmt.Sprintf("%s/v1/action/create", t.baseURL)
+	if useSingleTransaction {
+		url += "?useSingleTransaction=true"
+	}
 
 	j, err := json.Marshal(actionPayload)
 
